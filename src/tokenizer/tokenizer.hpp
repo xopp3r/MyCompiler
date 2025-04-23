@@ -1,7 +1,6 @@
 #pragma once
 
 #include <vector>
-#include <functional>
 #include <string_view>
 
 
@@ -126,9 +125,26 @@ class MyTokenizer : public ITokenizer {
     size_t lineNumber;
     size_t cursor; // Текущий индекс
     
-    void skipSpaces();
-    void eat(size_t len);
-    std::string_view getSequence(std::function<bool(char)> matchingFunction);
-    // bool matchKeyword();
+    void eat(void);
     bool matchPrefix(std::string_view prefix);
+
+    void handleCharLiteral(void);
+    void handleStringLiteral(void);
+    void handleIdentifier(void);
+    void handleDigitLiteral(void);
+
+    
+    template<typename Matcher>
+    std::string_view getSequence(Matcher&& matchingFunction) {
+        size_t cursorStart = cursor;
+        while (cursor < code.length() and matchingFunction(code[cursor])){
+            eat(1);
+        }
+        return code.substr(cursorStart, cursor - cursorStart);
+    }
 };
+
+
+
+
+

@@ -18,7 +18,6 @@ std::vector<std::string_view> keywords = {
 };
 
 
-
 std::vector<std::string_view> operators = {
     "+", "-", "*", "/", "%", "++", "--", 
     "==", ">", "<", ">=", "<=", "!=",
@@ -28,16 +27,18 @@ std::vector<std::string_view> operators = {
 };
 
 
-
 std::vector<std::string_view> punctuators = {
     "(){}[],"
 };
 
 
 
-inline bool isIdentifier(char c){
-    return isalnum(c) || c == '_';
-}
+
+
+
+
+MyTokenizer::MyTokenizer(std::string_view code)
+    : code(code), ITokenizer(code) {}
 
 
 
@@ -54,10 +55,10 @@ bool MyTokenizer::matchPrefix(std::string_view prefix){
 
 
 
-bool matchType(std::string_view str, std::vector<std::string_view> wordClass){
+bool matchType(std::string_view str, std::vector<std::string_view> words){
 
-    for (int i = 0; i < wordClass.size(); i++) {
-        if (str.compare(wordClass[i])) return true;
+    for (int i = 0; i < words.size(); i++) {
+        if (str.compare(words[i])) return true;
     }
     
     return false;
@@ -65,168 +66,183 @@ bool matchType(std::string_view str, std::vector<std::string_view> wordClass){
 
 
 
+// void MyTokenizer::eat(size_t len){
 
-
-MyTokenizer::MyTokenizer(std::string_view code)
-    : code(code), ITokenizer(code) {}
-
-
-
-void MyTokenizer::eat(size_t len){
-
-    for (size_t i = 0; i < len; i++) {
+//     for (size_t i = 0; i < len; i++) {
      
-        if (code[cursor] == '\n'){ // если дошли до конца строки
-            cursor++; 
-            lineNumber++;
-            lineBegining = cursor;
-        } else {
-            cursor++; // сдвигаем курсор
-        }
+//         if (code[cursor] == '\n'){ // если дошли до конца строки
+//             cursor++; 
+//             lineNumber++;
+//             lineBegining = cursor;
+//         } else {
+//             cursor++; // сдвигаем курсор
+//         }
 
+//     }
+// }
+
+void MyTokenizer::eat(void){
+    if (code[cursor] == '\n'){ // если дошли до конца строки
+        cursor++; 
+        lineNumber++;
+        lineBegining = cursor;
+    } else {
+        cursor++; // сдвигаем курсор
     }
 }
 
 
-std::string_view MyTokenizer::getSequence(std::function<bool(char)> matchingFunction){
 
-    size_t cursorStart = cursor;
+
+void MyTokenizer::handleIdentifier(void){
+
+    std::string_view symbol = getSequence([](char c){
+        return isalnum(c) or c == '_';
+    });
     
-    while (cursor < code.length() && matchingFunction(code[cursor])){
-        eat(1);
+
+    if (matchType(symbol, keywords)){
+        
+        INFO << "Keyword found - " << symbol << std::endl;
+        tokens.push_back(Token(symbol.length(), cursor, TOKEN_KEYWORD, symbol));
+        
+    } else {
+        
+        INFO << "Identifier found - " << symbol << std::endl;
+        tokens.push_back(Token(symbol.length(), cursor, TOKEN_SYMBOL, symbol));
+        
     }
 
-    return std::string_view(code.data() + cursorStart, cursor - cursorStart);
 }
 
 
 
+void MyTokenizer::handleDigitLiteral(void){
 
+    std::string_view symbol = getSequence([](char c) -> bool { 
+        return isdigit(c); 
+    });
+
+    INFO << "Number literal found - " << symbol << std::endl;
+    tokens.push_back(Token(symbol.length(), cursor, TOKEN_NUMBER, symbol));
+
+}
+
+
+
+void MyTokenizer::handleStringLiteral(void){
+
+    eat();
+
+    std::string_view symbol = getSequence([this](char c) -> bool {
+        return c != '"';
+    });
+
+    if (code[cursor] == code.length() or code[cursor] != '"') ERROR("Missing closing quote at line " << lineNumber);
+
+    eat();
+
+    INFO << "String literal found - " << symbol << std::endl;
+    tokens.push_back(Token(symbol.length(), cursor, TOKEN_STRING, symbol));
+
+}
+
+
+
+void MyTokenizer::handleCharLiteral(void){
+
+    eat(); // opening quote
+
+    std::string_view symbol = getSequence([this](char c) -> bool {
+        return c != 39; // ascii(39) the single quote ( ' )
+    });
+
+    if (code[cursor] == code.length() or code[cursor] != 39) ERROR("Missing closing quote at line " << lineNumber);
+
+    eat(); // closing quote
+
+    if (symbol.length() != 1) ERROR("Invalid char literal at " << lineNumber << " row " << cursor - lineBegining << " column");
+
+    INFO << "Char literal found - " << symbol << std::endl;
+    tokens.push_back(Token(symbol.length(), cursor, TOKEN_CHAR, symbol));
+
+}
+
+
+
+// tokenizes soucrse code into tokens
 std::vector<Token> MyTokenizer::tokenize() {
-    
-
     
     
     while (cursor < code.size()){
         
-        // если токен - символ (переменная/keyword/тип)
-        if (isIdentifier(code[cursor]) && !isdigit(code[cursor])){
-            
-            std::string_view symbol = getSequence(isIdentifier);
-            
-            if (matchType(symbol, keywords)){
-                
-                INFO << "Keyword found - " << symbol << std::endl;
-                tokens.push_back(Token(symbol.length(), cursor, TOKEN_KEYWORD, symbol));
-                
-            } else {
-                
-                INFO << "Identifier found - " << symbol << std::endl;
-                tokens.push_back(Token(symbol.length(), cursor, TOKEN_SYMBOL, symbol));
-                
-            }
-            
+        // if token is an identifier
+        if (isalpha(code[cursor]) or code[cursor] == '_'){
+            handleIdentifier();
+            continue;
         }
 
-
-        // если число
+        // number literal
         if (isdigit(code[cursor])){
-            
-            std::string_view symbol = getSequence([](char c) -> bool { 
-                return isdigit(c); 
-            });
-
-            INFO << "Number literal found - " << symbol << std::endl;
-            tokens.push_back(Token(symbol.length(), cursor, TOKEN_NUMBER, symbol));
-            
+            handleDigitLiteral();
+            continue;
         }
 
-
-        // если строка
+        // string literal
         if (code[cursor] == '"'){
-
-            eat(1);
-
-            std::string_view symbol = getSequence([this](char c) -> bool {
-
-                if (c == '\n')
-                    ERROR("Not closed string literal at " << lineNumber << " row ");
-
-                return c != '"';
-
-            });
-            
-            eat(1);
-
-            INFO << "String literal found - " << symbol << std::endl;
-            tokens.push_back(Token(symbol.length(), cursor, TOKEN_STRING, symbol));
-            
+            handleStringLiteral();
+            continue;
         }
-
         
-        // если буква
+        // char literal
         if (code[cursor] == 39){ // ascii(39) the single quote ( ' )
-
-            eat(1);
-
-            std::string_view symbol = getSequence([this](char c) -> bool {
-
-                if (c == '\n')
-                    ERROR("Not closed string literal at " << lineNumber << " row ");
-
-                return c != 39;
-            });
-
-            eat(1);
-
-            if (symbol.length() != 1) 
-                ERROR("Invalid char literal at " << lineNumber << " row " << cursor - lineBegining << " column");
-
-            INFO << "Char literal found - " << symbol << std::endl;
-            tokens.push_back(Token(symbol.length(), cursor, TOKEN_CHAR, symbol));
-            
+            handleCharLiteral();
+            continue;
         }
 
-        // если пунктуация
+        // punctuation
         if (matchPrefix("//")){
 
             (void)getSequence([](char c) -> bool {
                 return c != '\n';
             });
 
+            continue;
         }
 
 
-        // если операторы
+        // operator
         if (matchPrefix("//")){
 
             (void)getSequence([](char c) -> bool {
                 return c != '\n';
             });
 
+            continue;
         }
 
         
-        // если комментарий
+        // comment
         if (matchPrefix("//")){
-
             (void)getSequence([](char c) -> bool {
                 return c != '\n';
             });
-
+            continue;
         }
         
 
-        // пропускаем пробелы
+        // skip spaces
         if (isspace(code[cursor])){
-
             (void)getSequence([](char c) -> bool { 
                 return isspace(c); 
             });
-
+            continue;
         }
         
+
+        ERROR("Unreconnized token (" << code[cursor] << ") at row " << lineNumber << " column " << cursor - lineBegining);
     }
     
+    // end of code token
     tokens.push_back(Token(0, code.size(), TOKEN_END, "\0"));
 }
