@@ -5,13 +5,16 @@
 
 int main(int argc, char const *argv[]) {
 
-    const char* sourseCode = 
+    const char* sourceCode = 
 " \ 
 int main() { \ 
     return 69; \ 
 } \ 
 ";
     
-    
+    MyTokenizer ctknzr(sourceCode);
 
+    ctknzr.tokenize();
+
+    return 0;
 }

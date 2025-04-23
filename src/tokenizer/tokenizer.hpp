@@ -1,14 +1,24 @@
 #pragma once
 
 #include <vector>
+#include <functional>
 #include <string_view>
 
 
 enum TokenType {
     TOKEN_END = 0,
     TOKEN_INVALID,
+    TOKEN_SYMBOL,
     TOKEN_KEYWORD,
-    TOKEN_SYMBOL
+    TOKEN_NUMBER,
+    TOKEN_CHAR,
+    TOKEN_STRING,
+    TOKEN_OPERATOR,
+    TOKEN_PUNCTUATOR,
+    TOKEN_PREPROCESSOR,
+    TOKEN_COMMENT,
+    TOKEN_WHITESPACE,
+
 };
 
 
@@ -25,6 +35,21 @@ class Token {
     size_t length;
     size_t position;
     TokenType type;
+};
+
+
+
+
+
+
+class TokenizerError : public std::runtime_error {
+    public:
+    const char* what() const noexcept override {
+        return what_message.c_str();
+    }
+
+    private:
+    std::string what_message;
 };
 
 
@@ -75,16 +100,35 @@ class Token {
 // Базовый интерфейс токенизатора
 class ITokenizer {
     public:
-        virtual ~ITokenizer() = default;
-        virtual std::vector<Token> tokenize(std::string_view source) = 0;
+    ITokenizer() = delete;
+    ITokenizer(std::string_view code);
+    
+    virtual ~ITokenizer() = default;
+
+    virtual std::vector<Token> tokenize() = 0;
 };
         
 
 // Токенизатор Си
-class CTokenizer : public ITokenizer {
+class MyTokenizer : public ITokenizer {
     public:
-    CTokenizer();
-    ~CTokenizer();
+    MyTokenizer() = delete;
+    MyTokenizer(std::string_view code);
+    ~MyTokenizer();
     
-    std::vector<Token> tokenize(std::string_view sourceCode) override;
+    std::vector<Token> tokenize() override;
+
+    private:
+    std::vector<Token> tokens;
+    std::string_view code;
+
+    size_t lineBegining; // Индекс начала строки
+    size_t lineNumber;
+    size_t cursor; // Текущий индекс
+    
+    void skipSpaces();
+    void eat(size_t len);
+    std::string_view getSequence(std::function<bool(char)> matchingFunction);
+    // bool matchKeyword();
+    bool matchPrefix(std::string_view prefix);
 };
