@@ -1,6 +1,8 @@
 
 #include <iostream>
-#include "tokenizer/tokenizer.hpp"
+#include <vector>
+
+#include "tokenizer/CmmTokenizer.hpp"
 
 
 int main(int argc, char const *argv[]) {
@@ -13,8 +15,11 @@ int main() { \
 ";
     
     MyTokenizer ctknzr(sourceCode);
+    std::vector<Token> tokens;
 
-    ctknzr.tokenize();
+    for (Token t = ctknzr.nextToken(); t.type != TOKEN_END; t = ctknzr.nextToken()) {
+        tokens.push_back(t);
+    }
 
     return 0;
 }
