@@ -7,9 +7,9 @@
 class MyTokenizer : public ITokenizer {
     public:
     MyTokenizer() = delete;
-    ~MyTokenizer();
-    MyTokenizer(std::string_view code) 
-        : code(code), ITokenizer(code) {}
+    ~MyTokenizer() = default;
+    MyTokenizer(std::string_view Code) 
+        :  ITokenizer(Code), code(Code) {}
     
         
     // returns next token
@@ -32,13 +32,14 @@ class MyTokenizer : public ITokenizer {
 
     // tokenizing
     char eat(void); // consume 1 char moving cursor
-    bool matchPrefix(std::string_view& prefix); 
+    bool matchPrefix(std::string_view prefix); 
     
     // token handling
     Token handleCharLiteral(void);
     Token handleStringLiteral(void);
     Token handleIdentifier(void);
     Token handleDigitLiteral(void);
+    Token handleOperator(void);
     void  handleSpaces(void);
     // TODO: other types
 

@@ -9,7 +9,7 @@
 class ITokenizer {
     public:
     ITokenizer() = delete;
-    ITokenizer(std::string_view code);
+    ITokenizer(std::string_view code) { (void)code; };
     
     virtual ~ITokenizer() = default;
 

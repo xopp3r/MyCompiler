@@ -18,8 +18,22 @@ enum TokenType {
     TOKEN_PARENTHESES_OPEN, // (
     TOKEN_PARENTHESES_CLOSE, // )
     TOKEN_COMMA, // ,
-    TOKEN_OPERATOR, // operator (TODO: separate into uniqe token types)
-    // TOKEN_INVALID, // missmatch
+    TOKEN_OP_PLUS, // +
+    TOKEN_OP_MINUS, // -
+    TOKEN_OP_MUL, // *
+    TOKEN_OP_DIV, // /
+    TOKEN_OP_MOD, // %
+    TOKEN_OP_EQUAL, // ==
+    TOKEN_OP_GREATER, // >
+    TOKEN_OP_GREATER_EQ, // >=
+    TOKEN_OP_LESS, // <
+    TOKEN_OP_LESS_EQ, // <=
+    TOKEN_OP_NOT_EQUAL, // !=
+    TOKEN_OP_AND, // &&
+    TOKEN_OP_OR, // ||
+    TOKEN_OP_NOT, // !
+    TOKEN_OP_ASSIGNMENT,  // =
+    TOKEN_INVALID // ERROR
 };
 
 
@@ -27,8 +41,8 @@ enum TokenType {
 // Token
 class Token {
     public:
-    Token(Position position, TokenType type, std::string_view lexeme)
-        : position(position), type(type), lexeme(lexeme) {}
+    Token(Position Position, TokenType Type, std::string_view Lexeme)
+        : lexeme(Lexeme), position(Position), type(Type) {}
     Token() = delete;
         
     

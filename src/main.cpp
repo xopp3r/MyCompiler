@@ -5,13 +5,13 @@
 #include "tokenizer/CmmTokenizer.hpp"
 
 
-int main(int argc, char const *argv[]) {
+int main(void){  //int argc, char const *argv[]
 
-    const char* sourceCode = 
-" \ 
-int main() { \ 
-    return 69; \ 
-} \ 
+    const char* sourceCode =
+" \
+int main() { \
+    return 69; \
+} \
 ";
     
     MyTokenizer ctknzr(sourceCode);
@@ -20,6 +20,11 @@ int main() { \
     for (Token t = ctknzr.nextToken(); t.type != TOKEN_END; t = ctknzr.nextToken()) {
         tokens.push_back(t);
     }
+
+    for (const auto& token : tokens) {
+        std::cout << token.lexeme << std::endl;
+    }
+    
 
     return 0;
 }
