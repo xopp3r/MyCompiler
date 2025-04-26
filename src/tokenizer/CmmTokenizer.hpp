@@ -8,8 +8,7 @@ class MyTokenizer : public ITokenizer {
     public:
     MyTokenizer() = delete;
     ~MyTokenizer() = default;
-    MyTokenizer(std::string_view Code) 
-        :  ITokenizer(Code), code(Code) {}
+    MyTokenizer(std::string_view Code);
     
         
     // returns next token
@@ -21,9 +20,9 @@ class MyTokenizer : public ITokenizer {
     std::string_view code;
 
     // cursor stuff
-    size_t lineNumber; 
-    size_t cursor; // current index
-    size_t lineBeginingCursor; // index of line start
+    size_t lineNumber = 0; 
+    size_t cursor = 0; // current index
+    size_t lineBeginingCursor = 0; // index of line start
     
     // positioning stuff
     Position startTokenPos; // pos of start of current token

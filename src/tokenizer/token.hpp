@@ -37,6 +37,38 @@ enum TokenType {
 };
 
 
+static std::string_view tokenTypeName[] = {
+    "TOKEN_END",
+    "TOKEN_IDENTIFIER",
+    "TOKEN_KEYWORD",
+    "TOKEN_NUMBER",
+    "TOKEN_CHAR",
+    "TOKEN_STRING",
+    "TOKEN_SEMICOLON",
+    "TOKEN_BRACE_OPEN",
+    "TOKEN_BRACE_CLOSE",
+    "TOKEN_PARENTHESES_OPEN",
+    "TOKEN_PARENTHESES_CLOSE",
+    "TOKEN_COMMA",
+    "TOKEN_OP_PLUS",
+    "TOKEN_OP_MINUS",
+    "TOKEN_OP_MUL",
+    "TOKEN_OP_DIV",
+    "TOKEN_OP_MOD",
+    "TOKEN_OP_EQUAL",
+    "TOKEN_OP_GREATER",
+    "TOKEN_OP_GREATER_EQ",
+    "TOKEN_OP_LESS",
+    "TOKEN_OP_LESS_EQ",
+    "TOKEN_OP_NOT_EQUAL",
+    "TOKEN_OP_AND",
+    "TOKEN_OP_OR",
+    "TOKEN_OP_NOT",
+    "TOKEN_OP_ASSIGNMENT",
+    "TOKEN_INVALID"
+};
+
+
 
 // Token
 class Token {
@@ -49,5 +81,9 @@ class Token {
     std::string_view lexeme; // text of token
     Position position;
     TokenType type;
+
+    std::string_view typeName() const {
+        return tokenTypeName[type];
+    };
 };
 

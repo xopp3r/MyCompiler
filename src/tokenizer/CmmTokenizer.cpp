@@ -21,15 +21,9 @@ std::vector<std::string_view> keywords = {
 
 
 
-// std::vector<std::regex> expressions = {
-//     std::regex(R"([a-zA-Z_]\w*)"), // TOKEN_IDENTIFIER or TOKEN_KEYWORD
-//     std::regex(R"(\d+)"),          // TOKEN_NUMBER
-//     std::regex(R"('.')"),          // TOKEN_CHAR
-//     std::regex(R"(".*")"),         // TOKEN_STRING
-//     std::regex(R"()"),             // TOKEN_OPERATOR
-// };
 
-
+MyTokenizer::MyTokenizer(std::string_view Code)
+    : ITokenizer(Code), code(Code) {};
 
 
 
@@ -86,6 +80,8 @@ void MyTokenizer::updateStartTokenPos(void){
 
 
 void MyTokenizer::handleSpaces(void){
+
+    if (cursor >= code.length()) return;
 
     if (matchPrefix("//")){ // skip comments
 
@@ -145,7 +141,6 @@ Token MyTokenizer::handleDigitLiteral(void){
 
 Token MyTokenizer::handleStringLiteral(void){
 
-    size_t cursorStart = cursor;
     eat(); // opening quote
     
     auto matchingFunction = [](char c) -> bool {
@@ -161,7 +156,7 @@ Token MyTokenizer::handleStringLiteral(void){
     eat(); // closing quote
 
 
-    std::string_view symbol = code.substr(cursorStart, cursor - cursorStart);
+    std::string_view symbol = code.substr(startTokenPos.cursor, cursor - startTokenPos.cursor);
 
     INFO("String literal found  - " << symbol);
     return Token(startTokenPos, TOKEN_STRING, symbol);
@@ -212,69 +207,69 @@ Token MyTokenizer::handleOperator(void){
     switch (code[cursor]){
     case '+':
         eat();
-        return Token(startTokenPos, TOKEN_OP_PLUS, code.substr(cursor, 1));
+        return Token(startTokenPos, TOKEN_OP_PLUS, code.substr(startTokenPos.cursor, 1));
 
     case '-':
         eat();
-        return Token(startTokenPos, TOKEN_OP_MINUS, code.substr(cursor, 1));
+        return Token(startTokenPos, TOKEN_OP_MINUS, code.substr(startTokenPos.cursor, 1));
 
     case '*':
         eat();
-        return Token(startTokenPos, TOKEN_OP_MUL, code.substr(cursor, 1));
+        return Token(startTokenPos, TOKEN_OP_MUL, code.substr(startTokenPos.cursor, 1));
 
     case '/':
         eat();
-        return Token(startTokenPos, TOKEN_OP_DIV, code.substr(cursor, 1));
+        return Token(startTokenPos, TOKEN_OP_DIV, code.substr(startTokenPos.cursor, 1));
 
     case '%':
         eat();
-        return Token(startTokenPos, TOKEN_OP_MOD, code.substr(cursor, 1));
+        return Token(startTokenPos, TOKEN_OP_MOD, code.substr(startTokenPos.cursor, 1));
 
     case '=':
         if (matchPrefix("==")) {
             eat();
             eat();
-            return Token(startTokenPos, TOKEN_OP_EQUAL, code.substr(cursor, 2));
+            return Token(startTokenPos, TOKEN_OP_EQUAL, code.substr(startTokenPos.cursor, 2));
         } else {
             eat();
-            return Token(startTokenPos, TOKEN_OP_ASSIGNMENT, code.substr(cursor, 1));
+            return Token(startTokenPos, TOKEN_OP_ASSIGNMENT, code.substr(startTokenPos.cursor, 1));
         }
 
     case '>':
         if (matchPrefix(">=")) {
             eat();
             eat();
-            return Token(startTokenPos, TOKEN_OP_GREATER_EQ, code.substr(cursor, 2));
+            return Token(startTokenPos, TOKEN_OP_GREATER_EQ, code.substr(startTokenPos.cursor, 2));
         } else {
             eat();
-            return Token(startTokenPos, TOKEN_OP_GREATER, code.substr(cursor, 1));
+            return Token(startTokenPos, TOKEN_OP_GREATER, code.substr(startTokenPos.cursor, 1));
         }
 
     case '<':
         if (matchPrefix("<=")) {
             eat();
             eat();
-            return Token(startTokenPos, TOKEN_OP_LESS_EQ, code.substr(cursor, 2));
+            return Token(startTokenPos, TOKEN_OP_LESS_EQ, code.substr(startTokenPos.cursor, 2));
         } else {
             eat();
-            return Token(startTokenPos, TOKEN_OP_LESS, code.substr(cursor, 1));
+            return Token(startTokenPos, TOKEN_OP_LESS, code.substr(startTokenPos.cursor, 1));
         }
 
     case '!':
         if (matchPrefix("!=")) {
             eat();
             eat();
-            return Token(startTokenPos, TOKEN_OP_NOT_EQUAL, code.substr(cursor, 2));
+            return Token(startTokenPos, TOKEN_OP_NOT_EQUAL, code.substr(startTokenPos.cursor, 2));
         } else {
             eat();
-            return Token(startTokenPos, TOKEN_OP_NOT, code.substr(cursor, 1));
+            return Token(startTokenPos, TOKEN_OP_NOT, code.substr(startTokenPos.cursor, 1));
         }
 
     case '|':
         if (matchPrefix("||")) {
             eat();
             eat();
-            return Token(startTokenPos, TOKEN_OP_OR, code.substr(cursor, 2));
+            return Token(startTokenPos, TOKEN_OP_OR, code.substr(startTokenPos.cursor, 2));
         } else {
             ERROR("Unrecognized operator: " << code[cursor] << " at " << printTokenPos());
         }
@@ -283,7 +278,7 @@ Token MyTokenizer::handleOperator(void){
         if (matchPrefix("&&")) {
             eat();
             eat();
-            return Token(startTokenPos, TOKEN_OP_AND, code.substr(cursor, 2));
+            return Token(startTokenPos, TOKEN_OP_AND, code.substr(startTokenPos.cursor, 2));
         } else {
             ERROR("Unrecognized operator: " << code[cursor] << " at " << printTokenPos());
         }
@@ -298,15 +293,18 @@ Token MyTokenizer::handleOperator(void){
 
 
 
+
+
 // tokenizes soucrse code into tokens
-Token MyTokenizer::nextToken() {
+Token MyTokenizer::nextToken(void) {
 
 
+    handleSpaces(); // skip spaces and comments
     
     if (cursor < code.length()){
-        handleSpaces(); // skip spaces and comments
+        
         updateStartTokenPos(); // current pos
-  
+
         
         switch (lookup(code[cursor])){ // match token category by its first letter
         case WORD_START:
@@ -324,9 +322,40 @@ Token MyTokenizer::nextToken() {
         case OPERATOR:
             return handleOperator();
 
+        // single character tokens
+        case SEMICOLON:
+            INFO("Semicolom found  - ;");
+            eat();
+            return Token(startTokenPos, TOKEN_SEMICOLON, code.substr(startTokenPos.cursor, 1));
+
+        case BRACE_OPEN:
+            INFO("Brace open found  - {");
+            eat();
+            return Token(startTokenPos, TOKEN_BRACE_OPEN, code.substr(startTokenPos.cursor, 1));
+
+        case BRACE_CLOSE:
+            INFO("Brace close found  - }");
+            eat();
+            return Token(startTokenPos, TOKEN_BRACE_CLOSE, code.substr(startTokenPos.cursor, 1));
+        
+        case PARENTHESES_OPEN:
+            INFO("Parentheses open found  - (");
+            eat();
+            return Token(startTokenPos, TOKEN_PARENTHESES_OPEN, code.substr(startTokenPos.cursor, 1));
+    
+        case PARENTHESES_CLOSE:
+            INFO("Parentheses close found  - )");
+            eat();
+            return Token(startTokenPos, TOKEN_PARENTHESES_CLOSE, code.substr(startTokenPos.cursor, 1));
+        
+        case COMMA:
+            INFO("Comma found  - ,");
+            eat();
+            return Token(startTokenPos, TOKEN_COMMA, code.substr(startTokenPos.cursor, 1));
+
 
         default:
-            ERROR("Unrecognized token start: " << code[cursor] << " at " << printTokenPos());
+            ERROR("Unrecognized token start:\n\t" << code[cursor] << "\nat " << printTokenPos());
             break;
         }
 
@@ -335,6 +364,7 @@ Token MyTokenizer::nextToken() {
     } else{
         // end of code
         updateStartTokenPos();
+        INFO("END OF FILE REACHED");
         return Token(startTokenPos, TOKEN_END, "EOF");
     } 
 }

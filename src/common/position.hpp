@@ -15,7 +15,7 @@ class Position {
                std::to_string(column) + " cursor: " + std::to_string(cursor) + " )";
     }
 
-    size_t line;
-    size_t column;
-    size_t cursor;
+    size_t line = 0;
+    size_t column = 0;
+    size_t cursor = 0;
 };

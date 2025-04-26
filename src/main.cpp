@@ -1,6 +1,7 @@
 
 #include <iostream>
 #include <vector>
+#include <format>
 
 #include "tokenizer/CmmTokenizer.hpp"
 
@@ -22,7 +23,10 @@ int main() { \
     }
 
     for (const auto& token : tokens) {
-        std::cout << token.lexeme << std::endl;
+        std::cout << std::format(
+            "Type: <{}> Position: <{} : {} : {}> Text: <{}>", 
+            token.typeName(), token.position.line, token.position.column, token.position.cursor, token.lexeme
+        ) << std::endl;
     }
     
 
