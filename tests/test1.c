@@ -9,8 +9,8 @@ int square(int number){
     return sqr;
 }
 
-ptr yes = "yes";
-ptr no = "no";
+pointer yes = "yes";
+pointer no = "no";
 
 
 int main(void){

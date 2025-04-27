@@ -11,8 +11,8 @@ class Position {
         : line(Line), column(Column), cursor(Cursor) {}
 
     std::string string(){
-        return std::string("( line: ") + std::to_string(line) + " column: " + 
-               std::to_string(column) + " cursor: " + std::to_string(cursor) + " )";
+        return std::string("( line: ") + std::to_string(line + 1) + " column: " + 
+               std::to_string(column + 1) + " cursor: " + std::to_string(cursor) + " )";
     }
 
     size_t line = 0;

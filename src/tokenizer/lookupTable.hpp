@@ -14,6 +14,7 @@ enum TokenCategory {
     STRING_LIT,
     OPERATOR,
     SEMICOLON,
+    COLON,
     BRACE_OPEN,
     BRACE_CLOSE,
     PARENTHESES_OPEN,
@@ -45,10 +46,11 @@ static constexpr std::array<TokenCategory, 256> generateLookupTable(){
     arr['}'] = BRACE_CLOSE;
     arr['{'] = BRACE_OPEN;
     arr[','] = COMMA;
-    
+    arr[':'] = COLON;
+     
 
     // operators
-    for (char c : R"(=+-/%<>!&*|)"){
+    for (char c : R"(=+-/%<>!&*|@)"){
         arr[c] = OPERATOR;
     }
     

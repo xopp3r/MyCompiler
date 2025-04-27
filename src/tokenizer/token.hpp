@@ -13,6 +13,7 @@ enum TokenType {
     TOKEN_CHAR, // char literal
     TOKEN_STRING, // string literal
     TOKEN_SEMICOLON, // ;
+    TOKEN_COLON, // :
     TOKEN_BRACE_OPEN, // {
     TOKEN_BRACE_CLOSE, // }
     TOKEN_PARENTHESES_OPEN, // (
@@ -33,6 +34,8 @@ enum TokenType {
     TOKEN_OP_OR, // ||
     TOKEN_OP_NOT, // !
     TOKEN_OP_ASSIGNMENT,  // =
+    TOKEN_OP_ADRESS, // &
+    TOKEN_OP_DEREFERENCE, // @
     TOKEN_INVALID // ERROR
 };
 
@@ -65,6 +68,8 @@ static std::string_view tokenTypeName[] = {
     "TOKEN_OP_OR",
     "TOKEN_OP_NOT",
     "TOKEN_OP_ASSIGNMENT",
+    "TOKEN_OP_ADRESS",
+    "TOKEN_OP_DEREFERENCE",
     "TOKEN_INVALID"
 };
 

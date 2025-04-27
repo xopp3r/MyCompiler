@@ -10,7 +10,7 @@
 
 
 std::vector<std::string_view> keywords = {
-    "break", "char", "continue",
+    "break", "char", "continue", "pointer",
     "else", "extern", "for", "goto", "if",
     "int", "return", "short", "void",
     "unsigned", "void", "while"
@@ -68,7 +68,8 @@ char MyTokenizer::eat(void){
 
 
 std::string MyTokenizer::printTokenPos(void){
-    return "Token at " + startTokenPos.string() + " - " + Position(lineNumber, cursor - lineBeginingCursor, cursor).string();
+    return "Token at " + startTokenPos.string() + " - " + 
+    Position(lineNumber + 1, cursor - lineBeginingCursor + 1, cursor).string();
 }
 
 
@@ -81,21 +82,22 @@ void MyTokenizer::updateStartTokenPos(void){
 
 void MyTokenizer::handleSpaces(void){
 
-    if (cursor >= code.length()) return;
+    while ((isspace(code[cursor]) or matchPrefix("//")) and cursor < code.length()){
 
-    if (matchPrefix("//")){ // skip comments
+        if (matchPrefix("//")){ // skip comments
 
+            (void) getSequence([](char c) -> bool {
+                return c != '\n';
+            });
+    
+        } 
+        // and spaces
         (void) getSequence([](char c) -> bool {
-            return c != '\n';
+            return isspace(c);
         });
 
-    } 
-    // and spaces
-    (void) getSequence([](char c) -> bool {
-        return isspace(c);
-    });
+    }
 
-    
 }
 
  
@@ -144,7 +146,7 @@ Token MyTokenizer::handleStringLiteral(void){
     eat(); // opening quote
     
     auto matchingFunction = [](char c) -> bool {
-        return c != 'c' and c != '\n';
+        return c != '"' and c != '\n';
     };
 
     while (matchingFunction(code[cursor]) and cursor < code.length()){
@@ -197,9 +199,11 @@ Token MyTokenizer::handleOperator(void){
     // TOKEN_OP_LESS_EQ, // <=
     // TOKEN_OP_NOT, // !
     // TOKEN_OP_NOT_EQUAL, // !=
+    // TOKEN_OP_ADRESS, // &
     // TOKEN_OP_AND, // &&
     // TOKEN_OP_OR, // ||
     // TOKEN_OP_ASSIGNMENT,  // =
+    // TOKEN_OP_DEREFERENCE, // @
     // TOKEN_OP_EQUAL, // ==
 
     INFO("Start of some operator found - " << code[cursor]);
@@ -224,6 +228,10 @@ Token MyTokenizer::handleOperator(void){
     case '%':
         eat();
         return Token(startTokenPos, TOKEN_OP_MOD, code.substr(startTokenPos.cursor, 1));
+
+    case '@':
+        eat();
+        return Token(startTokenPos, TOKEN_OP_DEREFERENCE, code.substr(startTokenPos.cursor, 1));
 
     case '=':
         if (matchPrefix("==")) {
@@ -265,6 +273,16 @@ Token MyTokenizer::handleOperator(void){
             return Token(startTokenPos, TOKEN_OP_NOT, code.substr(startTokenPos.cursor, 1));
         }
 
+    case '&':
+        if (matchPrefix("&&")) {
+            eat();
+            eat();
+            return Token(startTokenPos, TOKEN_OP_AND, code.substr(startTokenPos.cursor, 2));
+        } else {
+            eat();
+            return Token(startTokenPos, TOKEN_OP_ADRESS, code.substr(startTokenPos.cursor, 1));
+        }
+
     case '|':
         if (matchPrefix("||")) {
             eat();
@@ -274,14 +292,6 @@ Token MyTokenizer::handleOperator(void){
             ERROR("Unrecognized operator: " << code[cursor] << " at " << printTokenPos());
         }
 
-    case '&':
-        if (matchPrefix("&&")) {
-            eat();
-            eat();
-            return Token(startTokenPos, TOKEN_OP_AND, code.substr(startTokenPos.cursor, 2));
-        } else {
-            ERROR("Unrecognized operator: " << code[cursor] << " at " << printTokenPos());
-        }
 
     default:
         ERROR("Unrecognized operator: " << code[cursor] << " at " << printTokenPos());
@@ -327,6 +337,11 @@ Token MyTokenizer::nextToken(void) {
             INFO("Semicolom found  - ;");
             eat();
             return Token(startTokenPos, TOKEN_SEMICOLON, code.substr(startTokenPos.cursor, 1));
+
+        case COLON:
+            INFO("Colon found  - ;");
+            eat();
+            return Token(startTokenPos, TOKEN_COLON, code.substr(startTokenPos.cursor, 1));
 
         case BRACE_OPEN:
             INFO("Brace open found  - {");

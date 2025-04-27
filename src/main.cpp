@@ -2,25 +2,38 @@
 #include <iostream>
 #include <vector>
 #include <format>
+#include <fstream>
+#include <sstream>
 
 #include "tokenizer/CmmTokenizer.hpp"
 
 
-int main(void){  //int argc, char const *argv[]
+int main(int argc, char const* argv[]){
 
-    const char* sourceCode =
-" \
-int main() { \
-    return 69; \
-} \
-";
+    if (argc <= 1) {
+        std::cout << "No input file specified" << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    std::ifstream sourceFile(argv[1]);
+
+    if (not sourceFile.is_open()){
+        std::cout << "Unable to open a file" << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    std::stringstream sourceCode;
+    sourceCode << sourceFile.rdbuf();
     
-    MyTokenizer ctknzr(sourceCode);
+    std::string sourceCodeString(sourceCode.str());
+    MyTokenizer tokenizer(sourceCodeString);
     std::vector<Token> tokens;
 
-    for (Token t = ctknzr.nextToken(); t.type != TOKEN_END; t = ctknzr.nextToken()) {
+
+    for (Token t = tokenizer.nextToken(); t.type != TOKEN_END; t = tokenizer.nextToken()) {
         tokens.push_back(t);
     }
+
 
     for (const auto& token : tokens) {
         std::cout << std::format(
@@ -29,6 +42,5 @@ int main() { \
         ) << std::endl;
     }
     
-
     return 0;
 }
