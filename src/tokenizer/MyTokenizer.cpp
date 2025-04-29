@@ -1,5 +1,5 @@
 
-#include "CmmTokenizer.hpp"
+#include "MyTokenizer.hpp"
 #include "lookupTable.hpp"
 #include "../common/logger.hpp"
 
@@ -9,11 +9,11 @@
 
 
 
-std::vector<std::string_view> keywords = {
-    "break", "char", "continue", "pointer",
-    "else", "extern", "for", "goto", "if",
-    "int", "return", "short", "void",
-    "unsigned", "void", "while"
+static std::vector<std::string_view> keywords = {
+    "break", "continue",
+    "else", "if", "while",
+    "return", "extern", "uint"
+    "void", "char", "int", "pointer"
 };
 
 
@@ -115,7 +115,43 @@ Token MyTokenizer::handleIdentifier(void){
     if (matchType(symbol, keywords)){
         
         INFO("Keyword found - " << symbol);
-        return Token(startTokenPos, TOKEN_KEYWORD, symbol);
+
+        switch (symbol[0]) {
+        case 'b':
+            return Token(startTokenPos, TOKEN_KEYWORD_BREAK, symbol);
+
+        case 'c':
+            if (symbol[1] == 'h') return Token(startTokenPos, TOKEN_KEYWORD_CHAR, symbol);
+            else return Token(startTokenPos, TOKEN_KEYWORD_CONTINUE, symbol);
+    
+        case 'e':
+            return Token(startTokenPos, TOKEN_KEYWORD_EXTERN, symbol);
+    
+        case 'i':
+            if (symbol[1] == 'f') return Token(startTokenPos, TOKEN_KEYWORD_IF, symbol);
+            else return Token(startTokenPos, TOKEN_KEYWORD_INT, symbol);
+
+        case 'w':
+            return Token(startTokenPos, TOKEN_KEYWORD_WHILE, symbol);
+    
+        case 'r':
+            return Token(startTokenPos, TOKEN_KEYWORD_RETURN, symbol);
+
+        case 'v':
+            return Token(startTokenPos, TOKEN_KEYWORD_VOID, symbol);
+    
+        case 'u':
+            return Token(startTokenPos, TOKEN_KEYWORD_UINT, symbol);
+
+        case 'p':
+            return Token(startTokenPos, TOKEN_KEYWORD_POINTER, symbol);
+    
+
+        default:
+            break;
+        }
+
+        ERROR("Internal error: keyword " << symbol << " doesn't match any category");
         
     } else {
         

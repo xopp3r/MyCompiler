@@ -8,7 +8,18 @@
 enum TokenType {
     TOKEN_END = 0, // end of file
     TOKEN_IDENTIFIER, // user-defined namse (variable / function name)
-    TOKEN_KEYWORD, // one of reserved keywords (if / else / int ...)
+    TOKEN_KEYWORD_BREAK,
+    TOKEN_KEYWORD_CONTINUE,
+    TOKEN_KEYWORD_ELSE,
+    TOKEN_KEYWORD_IF,
+    TOKEN_KEYWORD_WHILE,
+    TOKEN_KEYWORD_RETURN,
+    TOKEN_KEYWORD_EXTERN,
+    TOKEN_KEYWORD_VOID,
+    TOKEN_KEYWORD_CHAR,
+    TOKEN_KEYWORD_INT,
+    TOKEN_KEYWORD_UINT,
+    TOKEN_KEYWORD_POINTER,
     TOKEN_NUMBER, // number literal
     TOKEN_CHAR, // char literal
     TOKEN_STRING, // string literal
@@ -43,7 +54,18 @@ enum TokenType {
 static std::string_view tokenTypeName[] = {
     "TOKEN_END",
     "TOKEN_IDENTIFIER",
-    "TOKEN_KEYWORD",
+    "TOKEN_KEYWORD_BREAK",
+    "TOKEN_KEYWORD_CONTINUE",
+    "TOKEN_KEYWORD_ELSE",
+    "TOKEN_KEYWORD_IF",
+    "TOKEN_KEYWORD_WHILE",
+    "TOKEN_KEYWORD_RETURN",
+    "TOKEN_KEYWORD_EXTERN",
+    "TOKEN_KEYWORD_VOID",
+    "TOKEN_KEYWORD_CHAR",
+    "TOKEN_KEYWORD_INT",
+    "TOKEN_KEYWORD_UINT",
+    "TOKEN_KEYWORD_POINTER",
     "TOKEN_NUMBER",
     "TOKEN_CHAR",
     "TOKEN_STRING",

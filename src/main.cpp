@@ -5,7 +5,7 @@
 #include <fstream>
 #include <sstream>
 
-#include "tokenizer/CmmTokenizer.hpp"
+#include "tokenizer/MyTokenizer.hpp"
 
 
 int main(int argc, char const* argv[]){
