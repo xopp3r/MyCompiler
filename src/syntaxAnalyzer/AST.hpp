@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include <nodes.hpp>
+#include "nodes.hpp"
 
 
 
@@ -10,7 +10,7 @@ public:
     AST() = delete;
     AST(std::unique_ptr<Node> Root)
         : root(std::move(Root)) {};
-    ~AST();
+    ~AST() = default;
 
     std::unique_ptr<Node> root;
 };

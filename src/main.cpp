@@ -6,6 +6,7 @@
 #include <sstream>
 
 #include "tokenizer/MyTokenizer.hpp"
+#include "syntaxAnalyzer/recursiveParser.hpp"
 
 
 int main(int argc, char const* argv[]){
@@ -27,20 +28,26 @@ int main(int argc, char const* argv[]){
     
     std::string sourceCodeString(sourceCode.str());
     MyTokenizer tokenizer(sourceCodeString);
-    std::vector<Token> tokens;
-
-
-    for (Token t = tokenizer.nextToken(); t.type != TOKEN_END; t = tokenizer.nextToken()) {
-        tokens.push_back(t);
-    }
-
-
-    for (const auto& token : tokens) {
-        std::cout << std::format(
-            "Type: <{}> Position: <{} : {} : {}> Text: <{}>", 
-            token.typeName(), token.position.line, token.position.column, token.position.cursor, token.lexeme
-        ) << std::endl;
-    }
     
+    // std::vector<Token> tokens;
+
+    // for (Token t = tokenizer.nextToken(); t.type != TOKEN_END; t = tokenizer.nextToken()) {
+    //     tokens.push_back(t);
+    // }
+
+
+    // for (const auto& token : tokens) {
+    //     std::cout << std::format(
+    //         "Type: <{}> Position: <{} : {} : {}> Text: <{}>", 
+    //         token.typeName(), token.position.line, token.position.column, token.position.cursor, token.lexeme
+    //     ) << std::endl;
+    // }
+
+
+    auto nextTokenCallback = [&tokenizer](){ return tokenizer.nextToken(); };
+    
+    MyParser parser(nextTokenCallback);
+    parser.buildAST();
+
     return 0;
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include "IParser.hpp"
 
 
@@ -7,14 +8,27 @@ class MyParser : public IParser {
     public:
     MyParser() = delete;
     ~MyParser() = default;
-    MyParser(std::vector<Token>& Tokens);
+    MyParser(std::function<Token(void)> NextTokenCallback);
 
-    AST buildAST() override;
+    AST buildAST() override; // return full AST
 
     private:
-    size_t cursor = 0;
-    std::vector<Token>& tokens;
+    std::function<Token(void)> nextTokenCallback; // get next token
+    Token currentToken;
+
+    std::optional<Token> consumeTokenOpt(TokenType type); 
+    Token consumeToken(TokenType type); 
+    void discardToken(TokenType type); 
+
+    std::unique_ptr<Programm> parse(void);
+    std::unique_ptr<FunctionDefinition> parseFunctionDefenition(void);
+    std::unique_ptr<Expression> parseExpression(void);
+    std::vector<std::unique_ptr<Statement>> parseStatementSequence(void);
+    std::vector<std::pair<Token, Token>> parseFunctionDefenitionArguments(void);
+
+
 };
+
 
 
 

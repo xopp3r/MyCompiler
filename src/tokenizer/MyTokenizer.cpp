@@ -121,7 +121,7 @@ Token MyTokenizer::handleIdentifier(void){
             return Token(startTokenPos, TOKEN_KEYWORD_BREAK, symbol);
 
         case 'c':
-            if (symbol[1] == 'h') return Token(startTokenPos, TOKEN_KEYWORD_CHAR, symbol);
+            if (symbol[1] == 'h') return Token(startTokenPos, TOKEN_KEYWORD_TYPE, symbol);
             else return Token(startTokenPos, TOKEN_KEYWORD_CONTINUE, symbol);
     
         case 'e':
@@ -129,7 +129,7 @@ Token MyTokenizer::handleIdentifier(void){
     
         case 'i':
             if (symbol[1] == 'f') return Token(startTokenPos, TOKEN_KEYWORD_IF, symbol);
-            else return Token(startTokenPos, TOKEN_KEYWORD_INT, symbol);
+            else return Token(startTokenPos, TOKEN_KEYWORD_TYPE, symbol);
 
         case 'w':
             return Token(startTokenPos, TOKEN_KEYWORD_WHILE, symbol);
@@ -138,13 +138,13 @@ Token MyTokenizer::handleIdentifier(void){
             return Token(startTokenPos, TOKEN_KEYWORD_RETURN, symbol);
 
         case 'v':
-            return Token(startTokenPos, TOKEN_KEYWORD_VOID, symbol);
+            return Token(startTokenPos, TOKEN_KEYWORD_TYPE, symbol);
     
         case 'u':
-            return Token(startTokenPos, TOKEN_KEYWORD_UINT, symbol);
+            return Token(startTokenPos, TOKEN_KEYWORD_TYPE, symbol);
 
         case 'p':
-            return Token(startTokenPos, TOKEN_KEYWORD_POINTER, symbol);
+            return Token(startTokenPos, TOKEN_KEYWORD_TYPE, symbol);
     
 
         default:

@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include <vector>
+#include <functional>
 #include "AST.hpp"
 
 
@@ -9,11 +9,11 @@
 class IParser {
 public:
     IParser() = delete;
-    IParser(std::vector<Token>& Tokens){ (void)Tokens; };
+    IParser(std::function<Token(void)> nextTokenCallback){ (void)nextTokenCallback; };
     
-    virtual ~IParser();
+    virtual ~IParser() = default;
 
-    virtual AST buildAST();
+    virtual AST buildAST() = 0;
 };
 
 

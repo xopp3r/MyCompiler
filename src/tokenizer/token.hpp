@@ -15,11 +15,12 @@ enum TokenType {
     TOKEN_KEYWORD_WHILE,
     TOKEN_KEYWORD_RETURN,
     TOKEN_KEYWORD_EXTERN,
-    TOKEN_KEYWORD_VOID,
-    TOKEN_KEYWORD_CHAR,
-    TOKEN_KEYWORD_INT,
-    TOKEN_KEYWORD_UINT,
-    TOKEN_KEYWORD_POINTER,
+    TOKEN_KEYWORD_TYPE, // type (int/char/...)
+    // TOKEN_KEYWORD_VOID,
+    // TOKEN_KEYWORD_CHAR,
+    // TOKEN_KEYWORD_INT,
+    // TOKEN_KEYWORD_UINT,
+    // TOKEN_KEYWORD_POINTER,
     TOKEN_NUMBER, // number literal
     TOKEN_CHAR, // char literal
     TOKEN_STRING, // string literal
@@ -51,7 +52,7 @@ enum TokenType {
 };
 
 
-static std::string_view tokenTypeName[] = {
+static std::string_view tokenNames[] = {
     "TOKEN_END",
     "TOKEN_IDENTIFIER",
     "TOKEN_KEYWORD_BREAK",
@@ -61,11 +62,12 @@ static std::string_view tokenTypeName[] = {
     "TOKEN_KEYWORD_WHILE",
     "TOKEN_KEYWORD_RETURN",
     "TOKEN_KEYWORD_EXTERN",
-    "TOKEN_KEYWORD_VOID",
-    "TOKEN_KEYWORD_CHAR",
-    "TOKEN_KEYWORD_INT",
-    "TOKEN_KEYWORD_UINT",
-    "TOKEN_KEYWORD_POINTER",
+    "TOKEN_KEYWORD_TYPE",
+    // "TOKEN_KEYWORD_VOID",
+    // "TOKEN_KEYWORD_CHAR",
+    // "TOKEN_KEYWORD_INT",
+    // "TOKEN_KEYWORD_UINT",
+    // "TOKEN_KEYWORD_POINTER",
     "TOKEN_NUMBER",
     "TOKEN_CHAR",
     "TOKEN_STRING",
@@ -109,8 +111,10 @@ class Token {
     Position position;
     TokenType type;
 
-    std::string_view typeName() const {
-        return tokenTypeName[type];
-    };
 };
 
+
+
+inline std::string_view tokenName(TokenType tokType) {
+    return tokenNames[(int)tokType];
+};

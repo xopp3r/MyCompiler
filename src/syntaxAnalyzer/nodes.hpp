@@ -11,87 +11,33 @@
 
 class Node {
     public:
-    virtual ~Node() = default;
-    
-    // virtual method for Visitor pattern
-    virtual void accept(class Visitor& visitor) = 0;
-    
-    Node(Token nodeToken) : token(nodeToken) {};
-    
-    Token token;
-    
-    private:
-    Node() = delete;
-};
-
-
-
-
-
-
-
-
-
-class OOOOOOOO : public Node {
-    public:
-    OOOOOOOO(Token nodeToken) : Node(nodeToken) {};
-
-};
-
-
-
-
-
-
-
-
-
-
-
-// < ================ LITERALS ================ >
-
-class IntegerLiteral : public Expression {
-    public:
-    IntegerLiteral(Token nodeToken) 
-        : Expression(nodeToken) {
+        virtual ~Node() = default;
         
-        try {
-            value = std::stoi(token.lexeme.data()); // string to int
-        } catch (std::invalid_argument const& ex) {
-            ERROR("Invalid number literal at " << token.position.string() << "\n");
-        } catch (std::out_of_range const& ex) {
-            ERROR("Number literal at " << token.position.string() << " is too big for int type\n");
-        }
-
+        // virtual method for Visitor pattern
+        // virtual void accept(class Visitor& visitor) const = 0;
+        
+        // Prevent slicing
+        Node(const Node&) = delete;
+        Node& operator=(const Node&) = delete;
+        
+        // Allow moving
+        Node(Node&&) = default;
+        Node& operator=(Node&&) = default;
+    
+    protected:
+        Node() = default; 
     };
-    
-    int value;
-    
-};
 
 
-class StringLiteral : public Expression {
-    public:
-    StringLiteral(Token nodeToken) 
-        : Expression(nodeToken), value(nodeToken.lexeme) {};
-    
-    std::string value;
-    
-};
 
 
-class CharLiteral : public Expression {
-    public:
-    CharLiteral(Token nodeToken) 
-        : Expression(nodeToken), value(nodeToken.lexeme.at(0)) {};
-    
-    char value;
-    
-};
-    
-    
 
 
+// class OOOOOOOO : public Node {
+//     public:
+//     OOOOOOOO(Token nodeToken) : Node(nodeToken) {};
+
+// };
 
 
 
@@ -103,9 +49,78 @@ class CharLiteral : public Expression {
 
 class Expression : public Node {
     public:
-    Expression(Token nodeToken) : Node(nodeToken) {};
-    
+    virtual ~Expression() override = default;
+
+    protected:
+    Expression() = default;
 };
+
+
+
+
+
+
+
+// < ================ LITERALS ================ >
+
+
+class Literal : public Expression{
+    public:
+    Literal(Token nodeToken) : token(nodeToken) {};
+
+    ~Literal() override = default;
+    
+    Token token;
+};
+
+
+    class IntegerLiteral final : public Literal {
+        public:
+        IntegerLiteral(Token nodeToken) 
+            : Literal(nodeToken) {
+            
+            try {
+                value = std::stoi(token.lexeme.data()); // string to int
+            } catch (std::invalid_argument const& ex) {
+                ERROR("Invalid number literal at " << token.position.string() << "\n");
+            } catch (std::out_of_range const& ex) {
+                ERROR("Number literal at " << token.position.string() << " is too big for int type\n");
+            }
+
+        };
+        
+
+        int value;
+        
+    };
+
+
+    class StringLiteral final : public Literal {
+        public:
+        StringLiteral(Token nodeToken) 
+            : Literal(nodeToken), value(nodeToken.lexeme) {};
+        
+        std::string value;
+        
+    };
+
+
+    class CharLiteral final : public Literal {
+        public:
+        CharLiteral(Token nodeToken) 
+            : Literal(nodeToken), value(nodeToken.lexeme.at(0)) {};
+        
+        char value;
+        
+    };
+        
+    
+
+
+
+
+
+
 
 
 
@@ -121,58 +136,56 @@ class Expression : public Node {
 // < ================ STATEMENTS ================ >
 
 class Statement : public Node {
-    public:
-    Statement(Token nodeToken) : Node(nodeToken) {};
-
     
 };
+    // TODO: constructors 
 
-    class AssignmentStatement : public Statement {
-        public:
-        AssignmentStatement(Token nodeToken, Token Variable, std::unique_ptr<Expression> Value) 
-            : Statement(nodeToken), variable(Variable), value(move(Value)) {};
+    // class AssignmentStatement : public Statement {
+    //     public:
+    //     AssignmentStatement(Token nodeToken, Token Variable, std::unique_ptr<Expression> Value) 
+    //         : Statement(nodeToken), variable(Variable), value(std::move(Value)) {};
 
-        Token variable;
-        std::unique_ptr<Expression> value;
-    };
-
-
-    class VariableDefenitionStatement : public Statement {
-        public:
-        VariableDefenitionStatement(Token nodeToken, Token Type, Token Name) 
-            : Statement(nodeToken), type(Type), name(Name) {};
-
-        Token type;
-        Token name;
-    };
+    //     Token variable;
+    //     std::unique_ptr<Expression> value;
+    // };
 
 
-    class IfStatement : public Statement {
-        public:
-        IfStatement(Token nodeToken) : Statement(nodeToken) {};
+    // class VariableDefenitionStatement : public Statement {
+    //     public:
+    //     VariableDefenitionStatement(Token nodeToken, Token Type, Token Name) 
+    //         : Statement(nodeToken), type(Type), name(Name) {};
 
-        std::unique_ptr<Expression> condition;
-        std::unique_ptr<std::vector<Statement>> ifbody;
-    };
-
-
-    class IfElseStatement : public Statement {
-        public:
-        IfElseStatement(Token nodeToken) : Statement(nodeToken) {};
-
-        std::unique_ptr<Expression> condition;
-        std::unique_ptr<std::vector<Statement>> ifbody;
-        std::unique_ptr<std::vector<Statement>> elsebody;
-    };
+    //     Token type;
+    //     Token name;
+    // };
 
 
-    class WhileStatement : public Statement {
-        public:
-        WhileStatement(Token nodeToken) : Statement(nodeToken) {};
+    // class IfStatement : public Statement {
+    //     public:
+    //     IfStatement(Token nodeToken) : Statement(nodeToken) {};
 
-        std::unique_ptr<Expression> condition;
-        std::unique_ptr<std::vector<Statement>> ifbody;
-    };
+    //     std::unique_ptr<Expression> condition;
+    //     std::unique_ptr<std::vector<Statement>> ifbody;
+    // };
+
+
+    // class IfElseStatement : public Statement {
+    //     public:
+    //     IfElseStatement(Token nodeToken) : Statement(nodeToken) {};
+
+    //     std::unique_ptr<Expression> condition;
+    //     std::unique_ptr<std::vector<Statement>> ifbody;
+    //     std::unique_ptr<std::vector<Statement>> elsebody;
+    // };
+
+
+    // class WhileStatement : public Statement {
+    //     public:
+    //     WhileStatement(Token nodeToken) : Statement(nodeToken) {};
+
+    //     std::unique_ptr<Expression> condition;
+    //     std::unique_ptr<std::vector<Statement>> ifbody;
+    // };
 
 
 
@@ -187,17 +200,15 @@ class Statement : public Node {
 class FunctionDefinition : public Node {
     public:
     FunctionDefinition(
-                        Token nodeToken, 
                         Token Name, 
                         Token ReturnType, 
                         std::vector<std::pair<Token, Token>> Arguments, 
                         std::vector<std::unique_ptr<Statement>> Body
                       ) 
-        : Node(nodeToken),  
-          name(Name),
+        : name(Name),
           returnType(ReturnType),
           arguments(Arguments),
-          body(Body) {};
+          body(std::move(Body)) {};
 
     Token name;
     Token returnType;
@@ -212,7 +223,7 @@ class FunctionDefinition : public Node {
 class Programm : public Node {
     public:
     Programm(std::vector<std::unique_ptr<FunctionDefinition>> Functions) 
-        : Node(Token(Position(0,0,0), TOKEN_END, "ROOT_NODE")), functions(Functions) {}
+        : functions(std::move(Functions)) {}
 
     // other stuff
     std::vector<std::unique_ptr<FunctionDefinition>> functions;
