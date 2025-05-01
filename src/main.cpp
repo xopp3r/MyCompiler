@@ -50,6 +50,6 @@ int main(int argc, char const* argv[]){
     parser.buildAST();
 
 
-    std::cout << "SUCCESS FINISH";
+    std::cout << "SUCCESS FINISH" << std::endl;
     return 0;
 }

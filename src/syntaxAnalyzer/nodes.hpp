@@ -166,9 +166,9 @@ class Statement : public Node {
     };
 
 
-    class VariableDefenitionStatement final : public Statement {
+    class VariableDeclarationStatement final : public Statement {
         public:
-        VariableDefenitionStatement(Token Type, Token Name) 
+        VariableDeclarationStatement(Token Type, Token Name) 
             : type(Type), name(Name) {};
 
         Token type;
@@ -233,13 +233,13 @@ class Programm : public Node {
     public:
     Programm(
              std::vector<std::unique_ptr<FunctionDefinition>>&& Functions, 
-             std::vector<std::unique_ptr<VariableDefenitionStatement>>&& Globals
+             std::vector<std::unique_ptr<VariableDeclarationStatement>>&& Globals
             ) 
         : functions(std::move(Functions)), globalVariables(std::move(Globals)) {}
 
     // other stuff (metadata)
     std::vector<std::unique_ptr<FunctionDefinition>> functions;
-    std::vector<std::unique_ptr<VariableDefenitionStatement>> globalVariables;
+    std::vector<std::unique_ptr<VariableDeclarationStatement>> globalVariables;
 };
 
 

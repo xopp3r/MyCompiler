@@ -159,19 +159,22 @@ std::unique_ptr<Statement> MyParser::parseStatement(void){
 
     switch (currentToken.type) {
     // case TODO(statement;):
-        
+    // TODO return;
 
     case TOKEN_IDENTIFIER:
         return parseExpressionStatement();
 
     case TOKEN_KEYWORD_TYPE:
-        return parseFunctionDeclaration();
+        return parseVariableDeclarationStatement();
 
     case TOKEN_KEYWORD_IF:
         return parseIfStatement();
 
     case TOKEN_KEYWORD_WHILE:
         return parseWhileStatement();
+
+    case TOKEN_BRACE_CLOSE: // end of {block;}
+        return nullptr;
 
     default:
         PARSER_ERROR(currentToken, "Invalid statement");
@@ -187,11 +190,12 @@ std::unique_ptr<Statement> MyParser::parseStatement(void){
 std::vector<std::unique_ptr<Statement>> MyParser::parseStatementSequence(void){
     std::vector<std::unique_ptr<Statement>> statements;
 
-    for (
+    for ( // sorry
          auto statement = parseStatement();
-         statement != nullptr;
+         statement != nullptr; // until end of a {block;} 
          statement = parseStatement()
         ) statements.push_back(std::move(statement));
+    
 
     return statements;
 }
@@ -246,15 +250,14 @@ std::unique_ptr<FunctionDefinition> MyParser::parseFunctionDefinition(void){
 
 
 // <type> <idenifier>;
-std::unique_ptr<VariableDefenitionStatement> MyParser::parseFunctionDeclaration(void){
-
+std::unique_ptr<VariableDeclarationStatement> MyParser::parseVariableDeclarationStatement(void){
 
     Token type = consumeToken(TOKEN_KEYWORD_TYPE);
     Token name = consumeToken(TOKEN_IDENTIFIER);
 
     discardToken(TOKEN_SEMICOLON);
 
-    return std::make_unique<VariableDefenitionStatement>(type, name);
+    return std::make_unique<VariableDeclarationStatement>(type, name);
 }
 
 
@@ -263,7 +266,7 @@ std::unique_ptr<VariableDefenitionStatement> MyParser::parseFunctionDeclaration(
 // (functionDefenition | globalVariableDefenition);
 std::unique_ptr<Programm> MyParser::parse(void){
     std::vector<std::unique_ptr<FunctionDefinition>> functions;
-    std::vector<std::unique_ptr<VariableDefenitionStatement>> globalVariables;
+    std::vector<std::unique_ptr<VariableDeclarationStatement>> globalVariables;
 
 
     while (currentToken.type != TOKEN_END){
@@ -274,7 +277,7 @@ std::unique_ptr<Programm> MyParser::parse(void){
             break;
         
         case TOKEN_KEYWORD_TYPE:
-            globalVariables.push_back(parseFunctionDeclaration());
+            globalVariables.push_back(parseVariableDeclarationStatement());
             break;
 
         default:

@@ -23,7 +23,7 @@ class MyParser : public IParser {
 
     std::unique_ptr<Programm> parse(void);
     std::unique_ptr<FunctionDefinition> parseFunctionDefinition(void);
-    std::unique_ptr<VariableDefenitionStatement> parseFunctionDeclaration(void);
+    std::unique_ptr<VariableDeclarationStatement> parseVariableDeclarationStatement(void);
     std::unique_ptr<Statement> parseStatement(void);
     std::unique_ptr<ExpressionStatement> parseExpressionStatement(void);
     std::unique_ptr<WhileStatement> parseWhileStatement(void);

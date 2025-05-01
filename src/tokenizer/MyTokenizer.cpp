@@ -125,8 +125,9 @@ Token MyTokenizer::handleIdentifier(void){
             else return Token(startTokenPos, TOKEN_KEYWORD_CONTINUE, symbol);
     
         case 'e':
-            return Token(startTokenPos, TOKEN_KEYWORD_EXTERN, symbol);
-    
+            if (symbol[1] == 'x') return Token(startTokenPos, TOKEN_KEYWORD_EXTERN, symbol);
+            else return Token(startTokenPos, TOKEN_KEYWORD_ELSE, symbol);\
+            
         case 'i':
             if (symbol[1] == 'f') return Token(startTokenPos, TOKEN_KEYWORD_IF, symbol);
             else return Token(startTokenPos, TOKEN_KEYWORD_TYPE, symbol);
