@@ -1,120 +1,79 @@
-
-
-    TOKEN_OP_PLUS, // +
-    TOKEN_OP_MINUS, // -
-    TOKEN_OP_MUL, // *
-    TOKEN_OP_DIV, // /
-    TOKEN_OP_MOD, // %
-    TOKEN_OP_EQUAL, // ==
-    TOKEN_OP_GREATER, // >
-    TOKEN_OP_GREATER_EQ, // >=
-    TOKEN_OP_LESS, // <
-    TOKEN_OP_LESS_EQ, // <=
-    TOKEN_OP_NOT_EQUAL, // !=
-    TOKEN_OP_AND, // &&
-    TOKEN_OP_OR, // ||
-    TOKEN_OP_NOT, // !
-    TOKEN_OP_ASSIGNMENT,  // =
-    TOKEN_OP_ADRESS, // &
-    TOKEN_OP_DEREFERENCE, // @
+// Language grammar in EBNF representation
 
 
 
-priority_0
-	: <IDENTIFIER>
-	| <CONSTANT>
-	| <STRING_LITERAL>
-	| '(' expression ')'
+
+priority_0              // highest priority
+	: <IDENTIFIER> | <STRING_LITERAL> | <NUMBER_LITERAL> | <CHAR_LITERAL> 
+    | '(' expression ')'
 	;
+
 
 
 priority_1
-	: priority_0 priority_1_tail
+    : priority_0
+	| priority_1 '[' expression ']'
+	| priority_1 '(' (expression (',' expression)*)? ')'
 	;
-
-
-priority_1_tail
-    : '[' expression ']' priority_1_tail
-    | '(' argument_list ')' priority_1_tail
-    | e
-    ;
-
-
-argument_list
-    : expression ',' argument_list
-    ;
-
 
 
 priority_2
 	: priority_1
-	| '-' priority_2 
-	| '!' priority_2 
-	| '&' priority_2 
-	| '@' priority_2 
+	| ('-' | '!') priority_1
+	| ('&' | '@' | type ':') priority_2
 	;
 
 
 priority_3
-	: priority_2
-	| priority_2 '*' priority_3 
-	| priority_2 '/' priority_3 
-	| priority_2 '%' priority_3 
+	: priority_2 (('*' | '/' | '%') priority_2)* 
 	;
 
 
 priority_4
-	: priority_3
-	| priority_3 '+' priority_4 
-	| priority_3 '-' priority_4 
+	: priority_3 (('+' | '-') priority_3)*
 	;
 
 
 priority_5
-	: priority_4
-	| priority_4 '>' priority_5 
-	| priority_4 '<' priority_5
-	| priority_4 '>=' priority_5 
-	| priority_4 '<=' priority_5 
-	| priority_4 '==' priority_5 
-	| priority_4 '!=' priority_5 
+	: priority_4 (('>' | '<' | '>=' | '<=' | '==' | '!=') priority_4)*
 	;
 
 
 priority_6
-	: priority_5
-	| priority_5 '&&' priority_6 
+	: priority_5 ('&&' priority_5)*
 	;
 
 
 priority_7
-	: priority_6
-	| priority_6 '||' priority_7 
+	: priority_6 ('||' priority_6)*
 	;
 
 
-expression
+expression              // lowest priority
     : priority_7
+	: <IDENTIFIER> '=' expression 
     ;
 
 
 
-assignment
-	: id '=' expression 
-	;
+type
+    : char | int | uint | pointer | void
+    ;
 
 
-variable_defenition
+
+variable_declaration
     : type <IDENTIFIER>
+
 
 
 statement
     : expression ';'
-    | assignment ';'
-    | variable_defenition ';'
+    | variable_declaration ';'
     | if_statement
     | while_statement
     ;
+
 
 
 statement_sequence
@@ -130,8 +89,7 @@ body
 
 
 if_statement
-    : 'if' '(' expression ')' body
-    | 'if' '(' expression ')' body else body
+    : 'if' '(' expression ')' body (else body)?
     ;
 
 
@@ -141,27 +99,23 @@ while_statement
     ;
 
 
+
 function_defenition
     : 'function' type <IDENTIFIER> '(' argument_list_defenition ')' body
     ;
 
 
+
 argument_list_defenition
-    : type <IDENTIFIER> argument_list_defenition
+    : (type <IDENTIFIER> (',' type <IDENTIFIER>)*)?
     ;
 
-
-
-type
-    : char
-    | int
-    | pointer
-    | void
-    ;
 
 
 programm
-    : function_defenition programm
-    : global_variable programm
-    | e
+    : (function_defenition | variable_declaration)*
     ;
+
+
+
+// TODO external function / variable declaration

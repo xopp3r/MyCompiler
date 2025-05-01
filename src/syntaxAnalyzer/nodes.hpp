@@ -44,34 +44,6 @@ class Node {
 
 
 
-
-// < ================ EXPRESSIONS ================ >
-
-class Expression : public Node {
-    public:
-    virtual ~Expression() override = default;
-
-    protected:
-    Expression() = default;
-};
-
-
-
-    // class AssignmentStatement final : public Expression {
-    //     public:
-    //     AssignmentStatement(Token Variable, std::unique_ptr<Expression> Value) 
-    //         : variable(Variable), value(std::move(Value)) {};
-
-    //     Token variable;
-    //     std::unique_ptr<Expression> value;
-    // };
-
-
-
-
-
-
-
 // < ================ LITERALS ================ >
 
 
@@ -131,6 +103,51 @@ class Literal : public Expression{
 
 
 
+
+
+
+
+
+
+// < ================ EXPRESSIONS ================ >
+
+class Expression : public Node {
+    public:
+    virtual ~Expression() override = default;
+
+    protected:
+    Expression() = default;
+};
+
+
+    class ExpressionPriority_0 final : public Expression {
+        public:
+        ExpressionPriority_0(Token Variable, std::unique_ptr<Expression> Value) 
+            : variable(Variable), value(std::move(Value)) {};
+
+        Token variable;
+        std::unique_ptr<Expression> value;
+    };
+
+
+
+
+
+
+
+
+
+
+
+
+    // class AssignmentStatement final : public Expression {
+    //     public:
+    //     AssignmentStatement(Token Variable, std::unique_ptr<Expression> Value) 
+    //         : variable(Variable), value(std::move(Value)) {};
+
+    //     Token variable;
+    //     std::unique_ptr<Expression> value;
+    // };
 
 
 
@@ -209,7 +226,7 @@ class Statement : public Node {
 
 // < ================ OTHER ================ >
 
-class FunctionDefinition : public Node {
+class FunctionDefinition final : public Node {
     public:
     FunctionDefinition(
                         Token Name, 
@@ -229,7 +246,7 @@ class FunctionDefinition : public Node {
 
 
 
-class Programm : public Node {
+class Programm final : public Node {
     public:
     Programm(
              std::vector<std::unique_ptr<FunctionDefinition>>&& Functions, 

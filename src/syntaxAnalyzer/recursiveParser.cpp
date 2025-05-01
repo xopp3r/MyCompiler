@@ -60,7 +60,7 @@ Token MyParser::consumeToken(TokenType type){
 
 // skips token if types match, else exits
 void MyParser::discardToken(TokenType type){
-    
+
     if (currentToken.type != type) {
         PARSER_ERROR(currentToken, tokenName(type) << " expected");
     }

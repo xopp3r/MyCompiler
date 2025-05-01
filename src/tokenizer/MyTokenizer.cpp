@@ -380,7 +380,7 @@ Token MyTokenizer::nextToken(void) {
             return Token(startTokenPos, TOKEN_SEMICOLON, code.substr(startTokenPos.cursor, 1));
 
         case COLON:
-            INFO("Colon found  - ;");
+            INFO("Colon found  - :");
             eat();
             return Token(startTokenPos, TOKEN_COLON, code.substr(startTokenPos.cursor, 1));
 
