@@ -18,13 +18,19 @@ class MyParser : public IParser {
 
     std::optional<Token> consumeTokenOpt(TokenType type); 
     Token consumeToken(TokenType type); 
+    bool discardTokenOpt(TokenType type); 
     void discardToken(TokenType type); 
 
     std::unique_ptr<Programm> parse(void);
-    std::unique_ptr<FunctionDefinition> parseFunctionDefenition(void);
+    std::unique_ptr<FunctionDefinition> parseFunctionDefinition(void);
+    std::unique_ptr<VariableDefenitionStatement> parseFunctionDeclaration(void);
+    std::unique_ptr<Statement> parseStatement(void);
+    std::unique_ptr<ExpressionStatement> parseExpressionStatement(void);
+    std::unique_ptr<WhileStatement> parseWhileStatement(void);
+    std::unique_ptr<IfStatement> parseIfStatement(void);
     std::unique_ptr<Expression> parseExpression(void);
     std::vector<std::unique_ptr<Statement>> parseStatementSequence(void);
-    std::vector<std::pair<Token, Token>> parseFunctionDefenitionArguments(void);
+    std::vector<std::pair<Token, Token>> parseFunctionDefinitionArguments(void);
 
 
 };

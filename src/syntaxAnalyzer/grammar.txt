@@ -21,9 +21,9 @@
 
 
 priority_0
-	: IDENTIFIER
-	| CONSTANT
-	| STRING_LITERAL
+	: <IDENTIFIER>
+	| <CONSTANT>
+	| <STRING_LITERAL>
 	| '(' expression ')'
 	;
 
@@ -105,7 +105,7 @@ assignment
 
 
 variable_defenition
-    : type IDENTIFIER
+    : type <IDENTIFIER>
 
 
 statement
@@ -142,7 +142,13 @@ while_statement
 
 
 function_defenition
-    : type IDENTIFIER '(' argument_list ')' body
+    : 'function' type <IDENTIFIER> '(' argument_list_defenition ')' body
+    ;
+
+
+argument_list_defenition
+    : type <IDENTIFIER> argument_list_defenition
+    ;
 
 
 
@@ -156,5 +162,6 @@ type
 
 programm
     : function_defenition programm
+    : global_variable programm
     | e
     ;

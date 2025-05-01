@@ -49,5 +49,7 @@ int main(int argc, char const* argv[]){
     MyParser parser(nextTokenCallback);
     parser.buildAST();
 
+
+    std::cout << "SUCCESS FINISH";
     return 0;
 }

@@ -6,8 +6,8 @@
 
 
 #define PARSER_ERROR(invalidToken, ...) \
-    do { ERROR("parser error at token: " << invalidToken.lexeme << "' ("  << \
-         tokenName(invalidToken.type) << ") at " << invalidToken.position.string() << "\n" << __VA_ARGS__); \
+    do { ERROR("parser error at token: '" << invalidToken.lexeme << "' ("  << \
+         tokenName(invalidToken.type) << ") at " << invalidToken.position.string() << " : " << __VA_ARGS__); \
        } while(0)
 
 
@@ -27,7 +27,7 @@ AST MyParser::buildAST(void){
 
 
 
-// optionally returns token
+// optionally consumes token and returns it if types match, else std::nullopt
 std::optional<Token> MyParser::consumeTokenOpt(TokenType type){
     
     if (currentToken.type != type) {
@@ -44,7 +44,7 @@ std::optional<Token> MyParser::consumeTokenOpt(TokenType type){
 }
 
 
-// return tokens or exits with error
+// consumes token and returns it if types match, else exits
 Token MyParser::consumeToken(TokenType type){
     
     if (currentToken.type != type) {
@@ -58,7 +58,7 @@ Token MyParser::consumeToken(TokenType type){
 }
 
 
-// skips token or exits with error
+// skips token if types match, else exits
 void MyParser::discardToken(TokenType type){
     
     if (currentToken.type != type) {
@@ -69,74 +69,222 @@ void MyParser::discardToken(TokenType type){
 }
 
 
-
-
-// std::unique_ptr<Expression> MyParser::parseExpression(void){
-//     // TODO
-// }
-
-
-
-
-std::vector<std::unique_ptr<Statement>> MyParser::parseStatementSequence(void){
-    std::vector<std::unique_ptr<Statement>> statements;
-//     // TODO
-
-    return statements;
-}
-
-
-std::vector<std::pair<Token, Token>> MyParser::parseFunctionDefenitionArguments(void){
-
-    std::vector<std::pair<Token, Token>> args;
-
-    auto type = consumeTokenOpt(TOKEN_KEYWORD_TYPE); 
-    auto name = consumeTokenOpt(TOKEN_IDENTIFIER); 
-    while (type and name) {
-
-        args.push_back(std::pair<Token, Token>(type.value(), name.value()));
-
-        discardToken(TOKEN_COMMA);
-        type = consumeTokenOpt(TOKEN_KEYWORD_TYPE);
-        name = consumeTokenOpt(TOKEN_IDENTIFIER);
-
+// skips token and returns true if types match, else false
+bool MyParser::discardTokenOpt(TokenType type){
+    
+    if (currentToken.type != type) {
+        INFO("Parser mismatch: " << tokenName(currentToken.type) << " expected, insted of '" << 
+             currentToken.lexeme << "' ("  << tokenName(type) << ") at " << currentToken.position.string());
+        
+        return false;
     }
 
-    if (type || name){
-        ERROR("Invalid arguments at " << (type ? type.value().position.string() : name.value().position.string()));
-    }
+    currentToken = nextTokenCallback();
+    return true;
 
-    return args;
 }
 
 
 
-std::unique_ptr<FunctionDefinition> MyParser::parseFunctionDefenition(void){
+// TODO
+// common interface for all expressions
+std::unique_ptr<Expression> MyParser::parseExpression(void){
+    discardToken(TOKEN_IDENTIFIER);
 
-    Token returnType = consumeToken(TOKEN_KEYWORD_TYPE);
-    Token name = consumeToken(TOKEN_IDENTIFIER);
+    return nullptr;
+}
+
+
+
+// expression ;
+std::unique_ptr<ExpressionStatement> MyParser::parseExpressionStatement(void){
+
+    auto expr = parseExpression();
+
+    discardToken(TOKEN_SEMICOLON);
+
+    return std::make_unique<ExpressionStatement>(std::move(expr));
+}
+
+
+
+// if ( expression ) { statementSequence } (else { statementSequence })?
+std::unique_ptr<IfStatement> MyParser::parseIfStatement(void){
+
+    discardToken(TOKEN_KEYWORD_IF);
 
     discardToken(TOKEN_PARENTHESES_OPEN);
-    auto arguments = parseFunctionDefenitionArguments();
+    auto condition = parseExpression();
+    discardToken(TOKEN_PARENTHESES_CLOSE);
+
+    discardToken(TOKEN_BRACE_OPEN);
+    auto ifBody = parseStatementSequence();
+    discardToken(TOKEN_BRACE_CLOSE);
+
+    // if there is ELSE block
+    if (discardTokenOpt(TOKEN_KEYWORD_ELSE)){
+        discardToken(TOKEN_BRACE_OPEN);
+        auto elseBody = parseStatementSequence();
+        discardToken(TOKEN_BRACE_CLOSE);
+
+        return std::make_unique<IfStatement>(std::move(condition), std::move(ifBody), std::move(elseBody));
+    }
+
+    // if there just single IF
+    return std::make_unique<IfStatement>(std::move(condition), std::move(ifBody), std::vector<std::unique_ptr<Statement>>(0));
+
+}
+
+
+std::unique_ptr<WhileStatement> MyParser::parseWhileStatement(void){
+
+    discardToken(TOKEN_KEYWORD_WHILE);
+
+    discardToken(TOKEN_PARENTHESES_OPEN);
+    auto condition = parseExpression();
     discardToken(TOKEN_PARENTHESES_CLOSE);
 
     discardToken(TOKEN_BRACE_OPEN);
     auto body = parseStatementSequence();
     discardToken(TOKEN_BRACE_CLOSE);
 
-    return std::make_unique<FunctionDefinition>(name, returnType, arguments, std::move(body));
+    return std::make_unique<WhileStatement>(std::move(condition), std::move(body));
+
 }
 
 
 
-std::unique_ptr<Programm> MyParser::parse(void){
-    std::vector<std::unique_ptr<FunctionDefinition>> functions;
 
-    for (auto func = parseFunctionDefenition(); func != nullptr; func = parseFunctionDefenition()){
-        functions.push_back(std::move(func));
+std::unique_ptr<Statement> MyParser::parseStatement(void){
+
+    switch (currentToken.type) {
+    // case TODO(statement;):
+        
+
+    case TOKEN_IDENTIFIER:
+        return parseExpressionStatement();
+
+    case TOKEN_KEYWORD_TYPE:
+        return parseFunctionDeclaration();
+
+    case TOKEN_KEYWORD_IF:
+        return parseIfStatement();
+
+    case TOKEN_KEYWORD_WHILE:
+        return parseWhileStatement();
+
+    default:
+        PARSER_ERROR(currentToken, "Invalid statement");
+        break;
     }
 
-    return std::make_unique<Programm>(std::move(functions));
+}
+
+
+
+
+// (statement)*
+std::vector<std::unique_ptr<Statement>> MyParser::parseStatementSequence(void){
+    std::vector<std::unique_ptr<Statement>> statements;
+
+    for (
+         auto statement = parseStatement();
+         statement != nullptr;
+         statement = parseStatement()
+        ) statements.push_back(std::move(statement));
+
+    return statements;
+}
+
+
+// <type> <identifier> (, <type> <identifier>)*
+std::vector<std::pair<Token, Token>> MyParser::parseFunctionDefinitionArguments(void){
+
+    std::vector<std::pair<Token, Token>> args;
+
+    auto type = consumeTokenOpt(TOKEN_KEYWORD_TYPE); 
+    auto name = consumeTokenOpt(TOKEN_IDENTIFIER); 
+    bool comma = type and name; // to bypass check at first argument
+    while (type and name and comma) {
+
+        args.push_back(std::pair<Token, Token>(type.value(), name.value()));
+
+        comma = discardTokenOpt(TOKEN_COMMA);
+        type = consumeTokenOpt(TOKEN_KEYWORD_TYPE);
+        name = consumeTokenOpt(TOKEN_IDENTIFIER);
+
+    }
+
+    // inclomplete argument
+    if (type or name or comma){
+        ERROR("Invalid function arguments at " << currentToken.position.string());
+    }
+
+    return args;
+}
+
+
+// function <type> <identifier> ( args_list_defeniton ) { statementSequence }
+std::unique_ptr<FunctionDefinition> MyParser::parseFunctionDefinition(void){
+
+    discardToken(TOKEN_KEYWORD_FUNCTION);
+
+    Token returnType = consumeToken(TOKEN_KEYWORD_TYPE);
+    Token name = consumeToken(TOKEN_IDENTIFIER);
+
+    discardToken(TOKEN_PARENTHESES_OPEN);
+    auto arguments = parseFunctionDefinitionArguments();
+    discardToken(TOKEN_PARENTHESES_CLOSE);
+
+    discardToken(TOKEN_BRACE_OPEN);
+    auto body = parseStatementSequence();
+    discardToken(TOKEN_BRACE_CLOSE);
+
+    return std::make_unique<FunctionDefinition>(name, returnType, std::move(arguments), std::move(body));
+}
+
+
+
+// <type> <idenifier>;
+std::unique_ptr<VariableDefenitionStatement> MyParser::parseFunctionDeclaration(void){
+
+
+    Token type = consumeToken(TOKEN_KEYWORD_TYPE);
+    Token name = consumeToken(TOKEN_IDENTIFIER);
+
+    discardToken(TOKEN_SEMICOLON);
+
+    return std::make_unique<VariableDefenitionStatement>(type, name);
+}
+
+
+
+
+// (functionDefenition | globalVariableDefenition);
+std::unique_ptr<Programm> MyParser::parse(void){
+    std::vector<std::unique_ptr<FunctionDefinition>> functions;
+    std::vector<std::unique_ptr<VariableDefenitionStatement>> globalVariables;
+
+
+    while (currentToken.type != TOKEN_END){
+        
+        switch (currentToken.type) {
+        case TOKEN_KEYWORD_FUNCTION:
+            functions.push_back(parseFunctionDefinition());
+            break;
+        
+        case TOKEN_KEYWORD_TYPE:
+            globalVariables.push_back(parseFunctionDeclaration());
+            break;
+
+        default:
+            PARSER_ERROR(currentToken, "Function or global variable defenition expected");
+            break;
+        }
+
+    }
+    
+    return std::make_unique<Programm>(std::move(functions), std::move(globalVariables));
 }
 
 

@@ -16,6 +16,7 @@ enum TokenType {
     TOKEN_KEYWORD_RETURN,
     TOKEN_KEYWORD_EXTERN,
     TOKEN_KEYWORD_TYPE, // type (int/char/...)
+    TOKEN_KEYWORD_FUNCTION,
     // TOKEN_KEYWORD_VOID,
     // TOKEN_KEYWORD_CHAR,
     // TOKEN_KEYWORD_INT,
@@ -63,6 +64,7 @@ static std::string_view tokenNames[] = {
     "TOKEN_KEYWORD_RETURN",
     "TOKEN_KEYWORD_EXTERN",
     "TOKEN_KEYWORD_TYPE",
+    "TOKEN_KEYWORD_FUNCTION",
     // "TOKEN_KEYWORD_VOID",
     // "TOKEN_KEYWORD_CHAR",
     // "TOKEN_KEYWORD_INT",

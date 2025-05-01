@@ -10,9 +10,9 @@
 
 
 static std::vector<std::string_view> keywords = {
-    "break", "continue",
+    "break", "continue", "function",
     "else", "if", "while",
-    "return", "extern", "uint"
+    "return", "extern", "uint",
     "void", "char", "int", "pointer"
 };
 
@@ -146,6 +146,10 @@ Token MyTokenizer::handleIdentifier(void){
         case 'p':
             return Token(startTokenPos, TOKEN_KEYWORD_TYPE, symbol);
     
+       case 'f':
+            return Token(startTokenPos, TOKEN_KEYWORD_FUNCTION, symbol);
+    
+            
 
         default:
             break;

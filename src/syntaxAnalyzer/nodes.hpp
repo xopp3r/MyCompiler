@@ -57,6 +57,17 @@ class Expression : public Node {
 
 
 
+    // class AssignmentStatement final : public Expression {
+    //     public:
+    //     AssignmentStatement(Token Variable, std::unique_ptr<Expression> Value) 
+    //         : variable(Variable), value(std::move(Value)) {};
+
+    //     Token variable;
+    //     std::unique_ptr<Expression> value;
+    // };
+
+
+
 
 
 
@@ -67,10 +78,11 @@ class Expression : public Node {
 class Literal : public Expression{
     public:
     Literal(Token nodeToken) : token(nodeToken) {};
-
+    
     ~Literal() override = default;
     
     Token token;
+
 };
 
 
@@ -136,57 +148,57 @@ class Literal : public Expression{
 // < ================ STATEMENTS ================ >
 
 class Statement : public Node {
+    public:    
+    ~Statement() override = default;
     
+
+    protected:
+    Statement() = default;
 };
-    // TODO: constructors 
-
-    // class AssignmentStatement : public Statement {
-    //     public:
-    //     AssignmentStatement(Token nodeToken, Token Variable, std::unique_ptr<Expression> Value) 
-    //         : Statement(nodeToken), variable(Variable), value(std::move(Value)) {};
-
-    //     Token variable;
-    //     std::unique_ptr<Expression> value;
-    // };
 
 
-    // class VariableDefenitionStatement : public Statement {
-    //     public:
-    //     VariableDefenitionStatement(Token nodeToken, Token Type, Token Name) 
-    //         : Statement(nodeToken), type(Type), name(Name) {};
+    class ExpressionStatement final : public Statement {
+        public:
+        ExpressionStatement(std::unique_ptr<Expression> expr) 
+            : expression(std::move(expr)) {};
 
-    //     Token type;
-    //     Token name;
-    // };
-
-
-    // class IfStatement : public Statement {
-    //     public:
-    //     IfStatement(Token nodeToken) : Statement(nodeToken) {};
-
-    //     std::unique_ptr<Expression> condition;
-    //     std::unique_ptr<std::vector<Statement>> ifbody;
-    // };
+        std::unique_ptr<Expression> expression;
+    };
 
 
-    // class IfElseStatement : public Statement {
-    //     public:
-    //     IfElseStatement(Token nodeToken) : Statement(nodeToken) {};
+    class VariableDefenitionStatement final : public Statement {
+        public:
+        VariableDefenitionStatement(Token Type, Token Name) 
+            : type(Type), name(Name) {};
 
-    //     std::unique_ptr<Expression> condition;
-    //     std::unique_ptr<std::vector<Statement>> ifbody;
-    //     std::unique_ptr<std::vector<Statement>> elsebody;
-    // };
+        Token type;
+        Token name;
+    };
 
 
-    // class WhileStatement : public Statement {
-    //     public:
-    //     WhileStatement(Token nodeToken) : Statement(nodeToken) {};
+    class IfStatement final : public Statement {
+        public:
+        IfStatement(
+                        std::unique_ptr<Expression> Condition, 
+                        std::vector<std::unique_ptr<Statement>>&& IfBody, 
+                        std::vector<std::unique_ptr<Statement>>&& ElseBody
+                       ) 
+            : condition(std::move(Condition)), ifBody(std::move(IfBody)), elseBody(std::move(ElseBody)) {};
 
-    //     std::unique_ptr<Expression> condition;
-    //     std::unique_ptr<std::vector<Statement>> ifbody;
-    // };
+        std::unique_ptr<Expression> condition;
+        std::vector<std::unique_ptr<Statement>> ifBody;
+        std::vector<std::unique_ptr<Statement>> elseBody;
+    };
 
+
+    class WhileStatement final : public Statement {
+        public:
+        WhileStatement(std::unique_ptr<Expression> Condition, std::vector<std::unique_ptr<Statement>>&& Body) 
+            : condition(std::move(Condition)), body(std::move(Body)) {};
+
+        std::unique_ptr<Expression> condition;
+        std::vector<std::unique_ptr<Statement>> body;
+    };
 
 
 
@@ -202,13 +214,10 @@ class FunctionDefinition : public Node {
     FunctionDefinition(
                         Token Name, 
                         Token ReturnType, 
-                        std::vector<std::pair<Token, Token>> Arguments, 
-                        std::vector<std::unique_ptr<Statement>> Body
+                        std::vector<std::pair<Token, Token>>&& Arguments, 
+                        std::vector<std::unique_ptr<Statement>>&& Body
                       ) 
-        : name(Name),
-          returnType(ReturnType),
-          arguments(Arguments),
-          body(std::move(Body)) {};
+        : name(Name), returnType(ReturnType), arguments(std::move(Arguments)), body(std::move(Body)) {};
 
     Token name;
     Token returnType;
@@ -222,11 +231,15 @@ class FunctionDefinition : public Node {
 
 class Programm : public Node {
     public:
-    Programm(std::vector<std::unique_ptr<FunctionDefinition>> Functions) 
-        : functions(std::move(Functions)) {}
+    Programm(
+             std::vector<std::unique_ptr<FunctionDefinition>>&& Functions, 
+             std::vector<std::unique_ptr<VariableDefenitionStatement>>&& Globals
+            ) 
+        : functions(std::move(Functions)), globalVariables(std::move(Globals)) {}
 
-    // other stuff
+    // other stuff (metadata)
     std::vector<std::unique_ptr<FunctionDefinition>> functions;
+    std::vector<std::unique_ptr<VariableDefenitionStatement>> globalVariables;
 };
 
 
