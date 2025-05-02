@@ -11,16 +11,15 @@ priority_0              // highest priority
 
 
 priority_1
-    : priority_0
-	| priority_1 '[' expression ']'
-	| priority_1 '(' (expression (',' expression)*)? ')'
+	: priority_0 (( '[' expression ']' ) |
+                  ( '(' (expression (',' expression)*)? ')' ))*
 	;
 
 
 priority_2
 	: priority_1
-	| ('-' | '!') priority_1
-	| ('&' | '@' | type ':') priority_2
+	| ('&' | '@' | '-' | '!') priority_2
+    | type ':' priority_2
 	;
 
 
@@ -49,11 +48,14 @@ priority_7
 	;
 
 
-expression              // lowest priority
-    : priority_7
-	: <IDENTIFIER> '=' expression 
+priority_8              // lowest priority
+	: priority_7 ('=' priority_8)? 
     ;
 
+
+expression              // common interface
+    : priority_8
+    ;
 
 
 type

@@ -40,9 +40,8 @@ class MyTokenizer : public ITokenizer {
     Token handleDigitLiteral(void);
     Token handleOperator(void);
     void  handleSpaces(void);
-    // TODO: other types
 
-    // XDD
+    // returns longest subsequence that match passed funtion
     template<typename Matcher> requires std::invocable<Matcher, char>
     std::string_view getSequence(Matcher&& matchingFunction) {
         size_t cursorStart = cursor;

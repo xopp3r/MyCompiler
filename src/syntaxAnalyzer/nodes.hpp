@@ -1,7 +1,6 @@
 #pragma once
 
 
-
 #include <memory>
 #include "../tokenizer/token.hpp"
 #include "../common/logger.hpp"
@@ -9,6 +8,11 @@
 
 
 
+
+
+
+
+// Base class for every node in ast
 class Node {
     public:
         virtual ~Node() = default;
@@ -33,74 +37,6 @@ class Node {
 
 
 
-// class OOOOOOOO : public Node {
-//     public:
-//     OOOOOOOO(Token nodeToken) : Node(nodeToken) {};
-
-// };
-
-
-
-
-
-
-// < ================ LITERALS ================ >
-
-
-class Literal : public Expression{
-    public:
-    Literal(Token nodeToken) : token(nodeToken) {};
-    
-    ~Literal() override = default;
-    
-    Token token;
-
-};
-
-
-    class IntegerLiteral final : public Literal {
-        public:
-        IntegerLiteral(Token nodeToken) 
-            : Literal(nodeToken) {
-            
-            try {
-                value = std::stoi(token.lexeme.data()); // string to int
-            } catch (std::invalid_argument const& ex) {
-                ERROR("Invalid number literal at " << token.position.string() << "\n");
-            } catch (std::out_of_range const& ex) {
-                ERROR("Number literal at " << token.position.string() << " is too big for int type\n");
-            }
-
-        };
-        
-
-        int value;
-        
-    };
-
-
-    class StringLiteral final : public Literal {
-        public:
-        StringLiteral(Token nodeToken) 
-            : Literal(nodeToken), value(nodeToken.lexeme) {};
-        
-        std::string value;
-        
-    };
-
-
-    class CharLiteral final : public Literal {
-        public:
-        CharLiteral(Token nodeToken) 
-            : Literal(nodeToken), value(nodeToken.lexeme.at(0)) {};
-        
-        char value;
-        
-    };
-        
-    
-
-
 
 
 
@@ -111,6 +47,7 @@ class Literal : public Expression{
 
 // < ================ EXPRESSIONS ================ >
 
+
 class Expression : public Node {
     public:
     virtual ~Expression() override = default;
@@ -120,13 +57,34 @@ class Expression : public Node {
 };
 
 
-    class ExpressionPriority_0 final : public Expression {
+    class UnaryOperation final : public Expression {
         public:
-        ExpressionPriority_0(Token Variable, std::unique_ptr<Expression> Value) 
-            : variable(Variable), value(std::move(Value)) {};
+        UnaryOperation(std::unique_ptr<Expression> Value, TokenType Operation) 
+            : value(std::move(Value)), operation(Operation) {};
 
-        Token variable;
         std::unique_ptr<Expression> value;
+        TokenType operation;
+    };
+
+
+    class BinaryOperation final : public Expression {
+        public:
+        BinaryOperation(std::unique_ptr<Expression> LeftValue, std::unique_ptr<Expression> RightValue, TokenType Operation) 
+            : leftValue(std::move(LeftValue)), rightValue(std::move(RightValue)), operation(Operation) {};
+
+        std::unique_ptr<Expression> leftValue;
+        std::unique_ptr<Expression> rightValue;
+        TokenType operation;
+    };
+
+
+    class FunctionCall final : public Expression {
+        public:
+        FunctionCall(std::unique_ptr<Expression> FunctionAdress, std::vector<std::unique_ptr<Expression>> Arguments) 
+            : functionAdress(std::move(FunctionAdress)), arguments(std::move(Arguments)) {};
+
+        std::unique_ptr<Expression> functionAdress;
+        std::vector<std::unique_ptr<Expression>> arguments;
     };
 
 
@@ -134,23 +92,61 @@ class Expression : public Node {
 
 
 
+// < ================ LITERALS ================ >
 
 
+class Primitive : public Expression {
+    public:
+    Primitive(Token nodeToken) : token(nodeToken) {};
+    
+    ~Primitive() override = default;
+    
+    Token token;
+};
 
 
+    class IntegerLiteral final : public Primitive {
+        public:
+        IntegerLiteral(Token literal) 
+            : Primitive(literal) {
+            try {
+                value = std::stoi(token.lexeme.data()); // string to int
+            } catch (std::invalid_argument const& ex) {
+                ERROR("Invalid number literal at " << token.position.string() << "\n");
+            } catch (std::out_of_range const& ex) {
+                ERROR("Number literal at " << token.position.string() << " is too big for int type\n");
+            }
+        };
+        
+        int value;
+    };
 
 
-    // class AssignmentStatement final : public Expression {
-    //     public:
-    //     AssignmentStatement(Token Variable, std::unique_ptr<Expression> Value) 
-    //         : variable(Variable), value(std::move(Value)) {};
-
-    //     Token variable;
-    //     std::unique_ptr<Expression> value;
-    // };
-
+    class StringLiteral final : public Primitive {
+        public:
+        StringLiteral(Token literal) 
+            : Primitive(literal), value(literal.lexeme) {};
+        
+        std::string value;
+    };
 
 
+    class CharLiteral final : public Primitive {
+        public:
+        CharLiteral(Token literal) 
+            : Primitive(literal), value(literal.lexeme.at(0)) {};
+        
+        char value;
+    };
+        
+
+
+    class Variable final : public Primitive {
+        public:
+        Variable(Token Identifier) 
+            : Primitive(Identifier) {};
+
+    };
 
 
 
@@ -218,6 +214,16 @@ class Statement : public Node {
     };
 
 
+    class ReturnStatement final : public Statement {
+        public:
+        ReturnStatement(std::unique_ptr<Expression> expr) 
+            : expression(std::move(expr)) {};
+
+        std::unique_ptr<Expression> expression;
+    };
+
+
+
 
 
 
@@ -258,48 +264,6 @@ class Programm final : public Node {
     std::vector<std::unique_ptr<FunctionDefinition>> functions;
     std::vector<std::unique_ptr<VariableDeclarationStatement>> globalVariables;
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// class BinaryOperation : public Expression {
-// public:
-//     std::std::unique_ptr<Expression> left;
-//     std::std::unique_ptr<Expression> right;
-    
-//     // BinaryOperation(std::std::unique_ptr<Expression> l, std::std::unique_ptr<Expression> r, std::string o)
-//     //     : left(std::move(l)), right(std::move(r)), op(std::move(o)) {}
-    
-//     void accept(Visitor& visitor) override;
-// };
-
-
-
-
 
 
 

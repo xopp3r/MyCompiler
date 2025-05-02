@@ -176,7 +176,7 @@ Token MyTokenizer::handleDigitLiteral(void){
     });
 
     INFO("Number literal found - " << symbol);
-    return Token(startTokenPos, TOKEN_NUMBER, symbol);
+    return Token(startTokenPos, TOKEN_INTEGER, symbol);
 
 }
 
@@ -375,37 +375,48 @@ Token MyTokenizer::nextToken(void) {
 
         // single character tokens
         case SEMICOLON:
-            INFO("Semicolom found  - ;");
+            INFO("Semicolom found - ;");
             eat();
             return Token(startTokenPos, TOKEN_SEMICOLON, code.substr(startTokenPos.cursor, 1));
 
         case COLON:
-            INFO("Colon found  - :");
+            INFO("Colon found - :");
             eat();
             return Token(startTokenPos, TOKEN_COLON, code.substr(startTokenPos.cursor, 1));
 
         case BRACE_OPEN:
-            INFO("Brace open found  - {");
+            INFO("Brace open found - {");
             eat();
             return Token(startTokenPos, TOKEN_BRACE_OPEN, code.substr(startTokenPos.cursor, 1));
 
         case BRACE_CLOSE:
-            INFO("Brace close found  - }");
+            INFO("Brace close found - }");
             eat();
             return Token(startTokenPos, TOKEN_BRACE_CLOSE, code.substr(startTokenPos.cursor, 1));
         
+        case SQR_BRACE_OPEN:
+            INFO("sqr brace open found - [");
+            eat();
+            return Token(startTokenPos, TOKEN_SQUARE_BRACE_OPEN, code.substr(startTokenPos.cursor, 1));
+
+        case SQR_BRACE_CLOSE:
+            INFO("sqr brace close found - ]");
+            eat();
+            return Token(startTokenPos, TOKEN_SQUARE_BRACE_CLOSE, code.substr(startTokenPos.cursor, 1));
+        
+
         case PARENTHESES_OPEN:
-            INFO("Parentheses open found  - (");
+            INFO("Parentheses open found - (");
             eat();
             return Token(startTokenPos, TOKEN_PARENTHESES_OPEN, code.substr(startTokenPos.cursor, 1));
     
         case PARENTHESES_CLOSE:
-            INFO("Parentheses close found  - )");
+            INFO("Parentheses close found - )");
             eat();
             return Token(startTokenPos, TOKEN_PARENTHESES_CLOSE, code.substr(startTokenPos.cursor, 1));
         
         case COMMA:
-            INFO("Comma found  - ,");
+            INFO("Comma found - ,");
             eat();
             return Token(startTokenPos, TOKEN_COMMA, code.substr(startTokenPos.cursor, 1));
 

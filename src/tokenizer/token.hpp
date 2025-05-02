@@ -17,18 +17,15 @@ enum TokenType {
     TOKEN_KEYWORD_EXTERN,
     TOKEN_KEYWORD_TYPE, // type (int/char/...)
     TOKEN_KEYWORD_FUNCTION,
-    // TOKEN_KEYWORD_VOID,
-    // TOKEN_KEYWORD_CHAR,
-    // TOKEN_KEYWORD_INT,
-    // TOKEN_KEYWORD_UINT,
-    // TOKEN_KEYWORD_POINTER,
-    TOKEN_NUMBER, // number literal
+    TOKEN_INTEGER, // number literal
     TOKEN_CHAR, // char literal
     TOKEN_STRING, // string literal
     TOKEN_SEMICOLON, // ;
     TOKEN_COLON, // :
     TOKEN_BRACE_OPEN, // {
     TOKEN_BRACE_CLOSE, // }
+    TOKEN_SQUARE_BRACE_OPEN, // [
+    TOKEN_SQUARE_BRACE_CLOSE, // ]
     TOKEN_PARENTHESES_OPEN, // (
     TOKEN_PARENTHESES_CLOSE, // )
     TOKEN_COMMA, // ,
@@ -54,7 +51,7 @@ enum TokenType {
 
 
 static std::string_view tokenNames[] = {
-    "TOKEN_END",
+    "TOKEN_END", 
     "TOKEN_IDENTIFIER",
     "TOKEN_KEYWORD_BREAK",
     "TOKEN_KEYWORD_CONTINUE",
@@ -65,17 +62,15 @@ static std::string_view tokenNames[] = {
     "TOKEN_KEYWORD_EXTERN",
     "TOKEN_KEYWORD_TYPE",
     "TOKEN_KEYWORD_FUNCTION",
-    // "TOKEN_KEYWORD_VOID",
-    // "TOKEN_KEYWORD_CHAR",
-    // "TOKEN_KEYWORD_INT",
-    // "TOKEN_KEYWORD_UINT",
-    // "TOKEN_KEYWORD_POINTER",
-    "TOKEN_NUMBER",
+    "TOKEN_INTEGER",
     "TOKEN_CHAR",
     "TOKEN_STRING",
     "TOKEN_SEMICOLON",
+    "TOKEN_COLON",
     "TOKEN_BRACE_OPEN",
     "TOKEN_BRACE_CLOSE",
+    "TOKEN_SQUARE_BRACE_OPEN",
+    "TOKEN_SQUARE_BRACE_CLOSE",
     "TOKEN_PARENTHESES_OPEN",
     "TOKEN_PARENTHESES_CLOSE",
     "TOKEN_COMMA",
@@ -96,7 +91,7 @@ static std::string_view tokenNames[] = {
     "TOKEN_OP_ASSIGNMENT",
     "TOKEN_OP_ADRESS",
     "TOKEN_OP_DEREFERENCE",
-    "TOKEN_INVALID"
+    "TOKEN_INVALID"     
 };
 
 

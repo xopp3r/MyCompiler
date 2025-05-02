@@ -16,22 +16,31 @@ class MyParser : public IParser {
     std::function<Token(void)> nextTokenCallback; // get next token
     Token currentToken;
 
-    std::optional<Token> consumeTokenOpt(TokenType type); 
-    Token consumeToken(TokenType type); 
-    bool discardTokenOpt(TokenType type); 
     void discardToken(TokenType type); 
+    bool discardTokenOpt(TokenType type); 
+    Token consumeToken(TokenType type); 
+    std::optional<Token> consumeTokenOpt(TokenType type); 
 
+    // parsing functions
     std::unique_ptr<Programm> parse(void);
+    
     std::unique_ptr<FunctionDefinition> parseFunctionDefinition(void);
-    std::unique_ptr<VariableDeclarationStatement> parseVariableDeclarationStatement(void);
-    std::unique_ptr<Statement> parseStatement(void);
-    std::unique_ptr<ExpressionStatement> parseExpressionStatement(void);
-    std::unique_ptr<WhileStatement> parseWhileStatement(void);
-    std::unique_ptr<IfStatement> parseIfStatement(void);
-    std::unique_ptr<Expression> parseExpression(void);
-    std::vector<std::unique_ptr<Statement>> parseStatementSequence(void);
     std::vector<std::pair<Token, Token>> parseFunctionDefinitionArguments(void);
+    std::vector<std::unique_ptr<Expression>> parseFunctionCallArguments(void);
 
+    std::vector<std::unique_ptr<Statement>> parseStatementSequence(void);
+    
+    std::unique_ptr<Statement> parseStatement(void);
+    std::unique_ptr<IfStatement> parseIfStatement(void);
+    std::unique_ptr<WhileStatement> parseWhileStatement(void);
+    std::unique_ptr<ReturnStatement> parseReturnStatement(void);
+    std::unique_ptr<ExpressionStatement> parseExpressionStatement(void);
+    std::unique_ptr<VariableDeclarationStatement> parseVariableDeclarationStatement(void);
+    
+    std::unique_ptr<Expression> parseExpression(void);
+    std::unique_ptr<Expression> parsePriority_1(void);
+    std::unique_ptr<Expression> parsePriority_2(void);
+    #include "expressionParsing.tpp" // templated functions defenition for parsing priority
 
 };
 

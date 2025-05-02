@@ -86,13 +86,52 @@ bool MyParser::discardTokenOpt(TokenType type){
 
 
 
-// TODO
-// common interface for all expressions
-std::unique_ptr<Expression> MyParser::parseExpression(void){
-    discardToken(TOKEN_IDENTIFIER);
 
-    return nullptr;
+
+
+
+
+
+
+// common interface for all expressions, realisation is in .tpp file
+std::unique_ptr<Expression> MyParser::parseExpression(void){
+    
+    auto expr = parsePriority<8>();
+
+    return expr;
 }
+
+
+
+
+
+std::vector<std::unique_ptr<Expression>> MyParser::parseFunctionCallArguments(void){
+    std::vector<std::unique_ptr<Expression>> arguments;
+
+    while (currentToken.type != TOKEN_PARENTHESES_CLOSE){
+        
+        // check if valid start of expression
+        if (not MyParser::isTokenOneOf<TOKEN_KEYWORD_TYPE, TOKEN_IDENTIFIER, TOKEN_STRING, TOKEN_CHAR, TOKEN_INTEGER, 
+            TOKEN_PARENTHESES_OPEN, TOKEN_OP_ADRESS, TOKEN_OP_DEREFERENCE, TOKEN_OP_MINUS, TOKEN_OP_NOT>(currentToken.type)) 
+                break;
+        
+        arguments.push_back(parseExpression());
+
+        if (currentToken.type != TOKEN_PARENTHESES_CLOSE) discardToken(TOKEN_COMMA);
+
+    }
+
+    // for ( // sorry
+    //     auto arg = parseExpression();
+    //     arg != nullptr; // until end of a (a, r, g, s)
+    //     arg = parseExpression()
+    // ) arguments.push_back(std::move(arg));
+   
+    
+    return arguments;
+}
+
+
 
 
 
@@ -105,6 +144,19 @@ std::unique_ptr<ExpressionStatement> MyParser::parseExpressionStatement(void){
 
     return std::make_unique<ExpressionStatement>(std::move(expr));
 }
+
+
+
+std::unique_ptr<ReturnStatement> MyParser::parseReturnStatement(void){
+
+    discardToken(TOKEN_KEYWORD_RETURN);
+    auto expr = parseExpression();
+    discardToken(TOKEN_SEMICOLON);
+
+    return std::make_unique<ReturnStatement>(std::move(expr));
+
+}
+
 
 
 
@@ -136,6 +188,7 @@ std::unique_ptr<IfStatement> MyParser::parseIfStatement(void){
 }
 
 
+
 std::unique_ptr<WhileStatement> MyParser::parseWhileStatement(void){
 
     discardToken(TOKEN_KEYWORD_WHILE);
@@ -158,12 +211,6 @@ std::unique_ptr<WhileStatement> MyParser::parseWhileStatement(void){
 std::unique_ptr<Statement> MyParser::parseStatement(void){
 
     switch (currentToken.type) {
-    // case TODO(statement;):
-    // TODO return;
-
-    case TOKEN_IDENTIFIER:
-        return parseExpressionStatement();
-
     case TOKEN_KEYWORD_TYPE:
         return parseVariableDeclarationStatement();
 
@@ -173,10 +220,17 @@ std::unique_ptr<Statement> MyParser::parseStatement(void){
     case TOKEN_KEYWORD_WHILE:
         return parseWhileStatement();
 
-    case TOKEN_BRACE_CLOSE: // end of {block;}
-        return nullptr;
+    case TOKEN_KEYWORD_RETURN:
+        return parseReturnStatement();
 
     default:
+        // check if valid start of statement
+        if (MyParser::isTokenOneOf<TOKEN_KEYWORD_IF, TOKEN_KEYWORD_WHILE, TOKEN_KEYWORD_TYPE, TOKEN_IDENTIFIER, 
+            TOKEN_STRING, TOKEN_CHAR, TOKEN_INTEGER, TOKEN_PARENTHESES_OPEN, TOKEN_OP_ADRESS, TOKEN_OP_DEREFERENCE, 
+            TOKEN_OP_MINUS, TOKEN_OP_NOT>(currentToken.type)) 
+                return parseExpressionStatement();
+
+        // else error
         PARSER_ERROR(currentToken, "Invalid statement");
         break;
     }
@@ -190,12 +244,23 @@ std::unique_ptr<Statement> MyParser::parseStatement(void){
 std::vector<std::unique_ptr<Statement>> MyParser::parseStatementSequence(void){
     std::vector<std::unique_ptr<Statement>> statements;
 
-    for ( // sorry
-         auto statement = parseStatement();
-         statement != nullptr; // until end of a {block;} 
-         statement = parseStatement()
-        ) statements.push_back(std::move(statement));
+    // for ( // sorry x2
+    //      auto statement = parseStatement();
+    //      statement != nullptr; // until end of a {block;} 
+    //      statement = parseStatement()
+    //     ) statements.push_back(std::move(statement));
     
+
+    while (currentToken.type != TOKEN_BRACE_CLOSE) {
+
+        // check if valid start of statement
+        if (not MyParser::isTokenOneOf<TOKEN_KEYWORD_IF, TOKEN_KEYWORD_WHILE, TOKEN_KEYWORD_TYPE, TOKEN_IDENTIFIER, 
+            TOKEN_STRING, TOKEN_CHAR, TOKEN_INTEGER, TOKEN_PARENTHESES_OPEN, TOKEN_OP_ADRESS, TOKEN_OP_DEREFERENCE, 
+            TOKEN_OP_MINUS, TOKEN_OP_NOT>(currentToken.type)) 
+                break;
+
+        statements.push_back(parseStatement());
+    }
 
     return statements;
 }
