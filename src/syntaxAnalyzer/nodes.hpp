@@ -4,7 +4,7 @@
 #include <memory>
 #include "../tokenizer/token.hpp"
 #include "../common/logger.hpp"
-
+#include "IVisitor.hpp"
 
 
 
@@ -18,7 +18,9 @@ class Node {
         virtual ~Node() = default;
         
         // virtual method for Visitor pattern
-        // virtual void accept(class Visitor& visitor) const = 0;
+        virtual void accept(IVisitor* visitor) const = 0;
+        // void accept(IVisitor* visitor) { visitor->visit(*this); }  // add this function to every final class
+
         
         // Prevent slicing
         Node(const Node&) = delete;
@@ -64,6 +66,8 @@ class Expression : public Node {
 
         std::unique_ptr<Expression> value;
         TokenType operation;
+
+        void accept(IVisitor* visitor) { visitor->visit(*this); }
     };
 
 
@@ -75,6 +79,8 @@ class Expression : public Node {
         std::unique_ptr<Expression> leftValue;
         std::unique_ptr<Expression> rightValue;
         TokenType operation;
+
+        void accept(IVisitor* visitor) { visitor->visit(*this); }
     };
 
 
@@ -85,6 +91,8 @@ class Expression : public Node {
 
         std::unique_ptr<Expression> functionAdress;
         std::vector<std::unique_ptr<Expression>> arguments;
+
+        void accept(IVisitor* visitor) { visitor->visit(*this); }
     };
 
 
@@ -119,6 +127,8 @@ class Primitive : public Expression {
         };
         
         int value;
+
+        void accept(IVisitor* visitor) { visitor->visit(*this); }
     };
 
 
@@ -128,6 +138,8 @@ class Primitive : public Expression {
             : Primitive(literal), value(literal.lexeme) {};
         
         std::string value;
+
+        void accept(IVisitor* visitor) { visitor->visit(*this); }
     };
 
 
@@ -137,6 +149,8 @@ class Primitive : public Expression {
             : Primitive(literal), value(literal.lexeme.at(0)) {};
         
         char value;
+
+        void accept(IVisitor* visitor) { visitor->visit(*this); }
     };
         
 
@@ -146,6 +160,7 @@ class Primitive : public Expression {
         Variable(Token Identifier) 
             : Primitive(Identifier) {};
 
+        void accept(IVisitor* visitor) { visitor->visit(*this); }
     };
 
 
@@ -176,6 +191,8 @@ class Statement : public Node {
             : expression(std::move(expr)) {};
 
         std::unique_ptr<Expression> expression;
+
+        void accept(IVisitor* visitor) { visitor->visit(*this); }
     };
 
 
@@ -186,6 +203,8 @@ class Statement : public Node {
 
         Token type;
         Token name;
+    
+        void accept(IVisitor* visitor) { visitor->visit(*this); }
     };
 
 
@@ -201,6 +220,8 @@ class Statement : public Node {
         std::unique_ptr<Expression> condition;
         std::vector<std::unique_ptr<Statement>> ifBody;
         std::vector<std::unique_ptr<Statement>> elseBody;
+    
+        void accept(IVisitor* visitor) { visitor->visit(*this); }
     };
 
 
@@ -211,6 +232,8 @@ class Statement : public Node {
 
         std::unique_ptr<Expression> condition;
         std::vector<std::unique_ptr<Statement>> body;
+    
+        void accept(IVisitor* visitor) { visitor->visit(*this); }
     };
 
 
@@ -220,7 +243,10 @@ class Statement : public Node {
             : expression(std::move(expr)) {};
 
         std::unique_ptr<Expression> expression;
+    
+        void accept(IVisitor* visitor) { visitor->visit(*this); }
     };
+
 
 
 
@@ -247,6 +273,7 @@ class FunctionDefinition final : public Node {
     std::vector<std::pair<Token, Token>> arguments; // pairs <type, name>
     std::vector<std::unique_ptr<Statement>> body;
 
+    void accept(IVisitor* visitor) { visitor->visit(*this); }
 };
 
 
@@ -263,28 +290,12 @@ class Programm final : public Node {
     // other stuff (metadata)
     std::vector<std::unique_ptr<FunctionDefinition>> functions;
     std::vector<std::unique_ptr<VariableDeclarationStatement>> globalVariables;
+
+    void accept(IVisitor* visitor) { visitor->visit(*this); }
 };
 
 
 
 
-
-
-// // Интерфейс посетителя (Visitor pattern)
-// class Visitor {
-// public:
-//     virtual ~Visitor() = default;
-//     virtual void visit(IntegerLiteral& node) = 0;
-//     virtual void visit(BinaryOperation& node) = 0;
-//     virtual void visit(VariableDeclaration& node) = 0;
-//     virtual void visit(BlockStatement& node) = 0;
-//     // ... другие методы visit для других типов узлов
-// };
-
-// // Реализация accept для конкретных узлов
-// void IntegerLiteral::accept(Visitor& visitor) { visitor.visit(*this); }
-// void BinaryOperation::accept(Visitor& visitor) { visitor.visit(*this); }
-// void VariableDeclaration::accept(Visitor& visitor) { visitor.visit(*this); }
-// void BlockStatement::accept(Visitor& visitor) { visitor.visit(*this); }
 
 
