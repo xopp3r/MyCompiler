@@ -1,0 +1,2 @@
+rewrite every node of ast to take Token for debug purposes
+Make token own str and do not store whole source code as str in compiler

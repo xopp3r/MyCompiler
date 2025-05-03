@@ -18,8 +18,8 @@ class Node {
         virtual ~Node() = default;
         
         // virtual method for Visitor pattern
-        virtual void accept(IVisitor* visitor) const = 0;
-        // void accept(IVisitor* visitor) { visitor->visit(*this); }  // add this function to every final class
+        virtual void accept(IVisitor* visitor) = 0;
+        // void accept(IVisitor* visitor) override { visitor->visit(*this); }  // add this function to every final class
 
         
         // Prevent slicing
@@ -61,38 +61,38 @@ class Expression : public Node {
 
     class UnaryOperation final : public Expression {
         public:
-        UnaryOperation(std::unique_ptr<Expression> Value, TokenType Operation) 
+        explicit UnaryOperation(std::unique_ptr<Expression> Value, TokenType Operation) 
             : value(std::move(Value)), operation(Operation) {};
 
         std::unique_ptr<Expression> value;
         TokenType operation;
 
-        void accept(IVisitor* visitor) { visitor->visit(*this); }
+        void accept(IVisitor* visitor) override { visitor->visit(*this); }
     };
 
 
     class BinaryOperation final : public Expression {
         public:
-        BinaryOperation(std::unique_ptr<Expression> LeftValue, std::unique_ptr<Expression> RightValue, TokenType Operation) 
+        explicit BinaryOperation(std::unique_ptr<Expression> LeftValue, std::unique_ptr<Expression> RightValue, TokenType Operation) 
             : leftValue(std::move(LeftValue)), rightValue(std::move(RightValue)), operation(Operation) {};
 
         std::unique_ptr<Expression> leftValue;
         std::unique_ptr<Expression> rightValue;
         TokenType operation;
 
-        void accept(IVisitor* visitor) { visitor->visit(*this); }
+        void accept(IVisitor* visitor) override { visitor->visit(*this); }
     };
 
 
     class FunctionCall final : public Expression {
         public:
-        FunctionCall(std::unique_ptr<Expression> FunctionAdress, std::vector<std::unique_ptr<Expression>> Arguments) 
+        explicit FunctionCall(std::unique_ptr<Expression> FunctionAdress, std::vector<std::unique_ptr<Expression>> Arguments) 
             : functionAdress(std::move(FunctionAdress)), arguments(std::move(Arguments)) {};
 
         std::unique_ptr<Expression> functionAdress;
         std::vector<std::unique_ptr<Expression>> arguments;
 
-        void accept(IVisitor* visitor) { visitor->visit(*this); }
+        void accept(IVisitor* visitor) override { visitor->visit(*this); }
     };
 
 
@@ -115,7 +115,7 @@ class Primitive : public Expression {
 
     class IntegerLiteral final : public Primitive {
         public:
-        IntegerLiteral(Token literal) 
+        explicit IntegerLiteral(Token literal) 
             : Primitive(literal) {
             try {
                 value = std::stoi(token.lexeme.data()); // string to int
@@ -128,39 +128,39 @@ class Primitive : public Expression {
         
         int value;
 
-        void accept(IVisitor* visitor) { visitor->visit(*this); }
+        void accept(IVisitor* visitor) override { visitor->visit(*this); }
     };
 
 
     class StringLiteral final : public Primitive {
         public:
-        StringLiteral(Token literal) 
+        explicit StringLiteral(Token literal) 
             : Primitive(literal), value(literal.lexeme) {};
         
         std::string value;
 
-        void accept(IVisitor* visitor) { visitor->visit(*this); }
+        void accept(IVisitor* visitor) override { visitor->visit(*this); }
     };
 
 
     class CharLiteral final : public Primitive {
         public:
-        CharLiteral(Token literal) 
+        explicit CharLiteral(Token literal) 
             : Primitive(literal), value(literal.lexeme.at(0)) {};
         
         char value;
 
-        void accept(IVisitor* visitor) { visitor->visit(*this); }
+        void accept(IVisitor* visitor) override { visitor->visit(*this); }
     };
         
 
 
     class Variable final : public Primitive {
         public:
-        Variable(Token Identifier) 
+        explicit Variable(Token Identifier) 
             : Primitive(Identifier) {};
 
-        void accept(IVisitor* visitor) { visitor->visit(*this); }
+        void accept(IVisitor* visitor) override { visitor->visit(*this); }
     };
 
 
@@ -187,30 +187,30 @@ class Statement : public Node {
 
     class ExpressionStatement final : public Statement {
         public:
-        ExpressionStatement(std::unique_ptr<Expression> expr) 
+        explicit ExpressionStatement(std::unique_ptr<Expression> expr) 
             : expression(std::move(expr)) {};
 
         std::unique_ptr<Expression> expression;
 
-        void accept(IVisitor* visitor) { visitor->visit(*this); }
+        void accept(IVisitor* visitor) override { visitor->visit(*this); }
     };
 
 
     class VariableDeclarationStatement final : public Statement {
         public:
-        VariableDeclarationStatement(Token Type, Token Name) 
+        explicit VariableDeclarationStatement(Token Type, Token Name) 
             : type(Type), name(Name) {};
 
         Token type;
         Token name;
     
-        void accept(IVisitor* visitor) { visitor->visit(*this); }
+        void accept(IVisitor* visitor) override { visitor->visit(*this); }
     };
 
 
     class IfStatement final : public Statement {
         public:
-        IfStatement(
+        explicit IfStatement(
                         std::unique_ptr<Expression> Condition, 
                         std::vector<std::unique_ptr<Statement>>&& IfBody, 
                         std::vector<std::unique_ptr<Statement>>&& ElseBody
@@ -221,30 +221,30 @@ class Statement : public Node {
         std::vector<std::unique_ptr<Statement>> ifBody;
         std::vector<std::unique_ptr<Statement>> elseBody;
     
-        void accept(IVisitor* visitor) { visitor->visit(*this); }
+        void accept(IVisitor* visitor) override { visitor->visit(*this); }
     };
 
 
     class WhileStatement final : public Statement {
         public:
-        WhileStatement(std::unique_ptr<Expression> Condition, std::vector<std::unique_ptr<Statement>>&& Body) 
+        explicit WhileStatement(std::unique_ptr<Expression> Condition, std::vector<std::unique_ptr<Statement>>&& Body) 
             : condition(std::move(Condition)), body(std::move(Body)) {};
 
         std::unique_ptr<Expression> condition;
         std::vector<std::unique_ptr<Statement>> body;
     
-        void accept(IVisitor* visitor) { visitor->visit(*this); }
+        void accept(IVisitor* visitor) override { visitor->visit(*this); }
     };
 
 
     class ReturnStatement final : public Statement {
         public:
-        ReturnStatement(std::unique_ptr<Expression> expr) 
+        explicit ReturnStatement(std::unique_ptr<Expression> expr) 
             : expression(std::move(expr)) {};
 
         std::unique_ptr<Expression> expression;
     
-        void accept(IVisitor* visitor) { visitor->visit(*this); }
+        void accept(IVisitor* visitor) override { visitor->visit(*this); }
     };
 
 
@@ -260,10 +260,10 @@ class Statement : public Node {
 
 class FunctionDefinition final : public Node {
     public:
-    FunctionDefinition(
+    explicit FunctionDefinition(
                         Token Name, 
                         Token ReturnType, 
-                        std::vector<std::pair<Token, Token>>&& Arguments, 
+                        std::vector<std::pair<Token, Token>>&& Arguments,
                         std::vector<std::unique_ptr<Statement>>&& Body
                       ) 
         : name(Name), returnType(ReturnType), arguments(std::move(Arguments)), body(std::move(Body)) {};
@@ -273,7 +273,7 @@ class FunctionDefinition final : public Node {
     std::vector<std::pair<Token, Token>> arguments; // pairs <type, name>
     std::vector<std::unique_ptr<Statement>> body;
 
-    void accept(IVisitor* visitor) { visitor->visit(*this); }
+    void accept(IVisitor* visitor) override { visitor->visit(*this); }
 };
 
 
@@ -281,7 +281,7 @@ class FunctionDefinition final : public Node {
 
 class Programm final : public Node {
     public:
-    Programm(
+    explicit Programm(
              std::vector<std::unique_ptr<FunctionDefinition>>&& Functions, 
              std::vector<std::unique_ptr<VariableDeclarationStatement>>&& Globals
             ) 
@@ -291,7 +291,7 @@ class Programm final : public Node {
     std::vector<std::unique_ptr<FunctionDefinition>> functions;
     std::vector<std::unique_ptr<VariableDeclarationStatement>> globalVariables;
 
-    void accept(IVisitor* visitor) { visitor->visit(*this); }
+    void accept(IVisitor* visitor) override { visitor->visit(*this); }
 };
 
 

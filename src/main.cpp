@@ -7,6 +7,7 @@
 
 #include "tokenizer/MyTokenizer.hpp"
 #include "syntaxAnalyzer/recursiveParser.hpp"
+#include "syntaxAnalyzer/printerVisitor.hpp"
 
 
 int main(int argc, char const* argv[]){
@@ -47,8 +48,10 @@ int main(int argc, char const* argv[]){
     auto nextTokenCallback = [&tokenizer](){ return tokenizer.nextToken(); };
     
     MyParser parser(nextTokenCallback);
-    parser.buildAST();
+    auto ast = parser.buildAST();
 
+    PrinterVisitor printer;
+    printer.print(*(ast.root));
 
     std::cout << "SUCCESS FINISH" << std::endl;
     return 0;

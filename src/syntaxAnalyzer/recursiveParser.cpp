@@ -20,7 +20,7 @@ MyParser::MyParser(std::function<Token(void)> NextTokenCallback)
 
 AST MyParser::buildAST(void){
     
-    std::unique_ptr<Node> root = parse();
+    std::unique_ptr<Programm> root = parse();
 
     return AST(std::move(root));
 }

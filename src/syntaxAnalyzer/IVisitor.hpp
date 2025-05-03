@@ -1,6 +1,25 @@
 #pragma once
 
-#include "nodes.hpp"
+
+class BinaryOperation;
+class UnaryOperation;
+class FunctionCall;
+class IntegerLiteral;
+class StringLiteral;
+class CharLiteral;
+class Variable;
+class ExpressionStatement;
+class VariableDeclarationStatement;
+class IfStatement;
+class WhileStatement;
+class ReturnStatement;
+class FunctionDefinition;
+class Programm;
+
+// constexpr unsigned char vbar = 179;
+// constexpr unsigned char hbar = 195;
+
+
 
 
 
@@ -25,6 +44,7 @@ public:
     virtual void visit(Programm& node) = 0;
 
 };
+
 
 
 
