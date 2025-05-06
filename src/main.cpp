@@ -29,7 +29,23 @@ int main(int argc, char const* argv[]){
     
     std::string sourceCodeString(sourceCode.str());
     MyTokenizer tokenizer(sourceCodeString);
+
+    auto nextTokenCallback = [&tokenizer](){ return tokenizer.nextToken(); };
     
+    MyParser parser(nextTokenCallback);
+    auto ast = parser.buildAST();
+
+    
+    PrinterVisitor printer;
+    printer.PrintProgramASTasHierarcy(ast.root.get());
+
+    std::cout << "SUCCESS FINISH" << std::endl;
+    return 0;
+}
+
+
+
+
     // std::vector<Token> tokens;
 
     // for (Token t = tokenizer.nextToken(); t.type != TOKEN_END; t = tokenizer.nextToken()) {
@@ -43,16 +59,3 @@ int main(int argc, char const* argv[]){
     //         token.typeName(), token.position.line, token.position.column, token.position.cursor, token.lexeme
     //     ) << std::endl;
     // }
-
-
-    auto nextTokenCallback = [&tokenizer](){ return tokenizer.nextToken(); };
-    
-    MyParser parser(nextTokenCallback);
-    auto ast = parser.buildAST();
-
-    PrinterVisitor printer;
-    printer.print(*(ast.root));
-
-    std::cout << "SUCCESS FINISH" << std::endl;
-    return 0;
-}

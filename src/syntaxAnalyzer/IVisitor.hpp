@@ -16,10 +16,6 @@ class ReturnStatement;
 class FunctionDefinition;
 class Programm;
 
-// constexpr unsigned char vbar = 179;
-// constexpr unsigned char hbar = 195;
-
-
 
 
 

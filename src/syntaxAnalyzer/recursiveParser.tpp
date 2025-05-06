@@ -159,20 +159,31 @@ std::unique_ptr<Expression> parsePriority(void){
         // priority_2
         // : priority_1
 	    // | ('&' | '@' | '-' | '!') priority_2
-        // | type ':' priority_2
+        // | '[' type ']' priority_2
         // ;
         std::unique_ptr<Expression> expr;
 
-        if (isTokenOneOf<TOKEN_OP_MINUS, TOKEN_OP_NOT, TOKEN_OP_ADRESS, TOKEN_OP_DEREFERENCE, TOKEN_KEYWORD_TYPE>(currentToken.type)) {
+        if (isTokenOneOf<TOKEN_OP_MINUS, TOKEN_OP_NOT, TOKEN_OP_ADRESS, TOKEN_OP_DEREFERENCE>(currentToken.type)) {
+
             TokenType consumedTokenType = currentToken.type;
             discardToken(currentToken.type);
-
-            if (consumedTokenType == TOKEN_KEYWORD_TYPE) discardToken(TOKEN_COLON);
             
             // recursivly parse inner expression for right-to-left associativity
             auto innerExpr = parsePriority<2>();
             
             expr = std::make_unique<UnaryOperation>(std::move(innerExpr), consumedTokenType);
+
+        } else if (currentToken.type == TOKEN_SQUARE_BRACE_OPEN) {
+
+            discardToken(TOKEN_SQUARE_BRACE_OPEN);
+            discardToken(TOKEN_KEYWORD_TYPE);
+            discardToken(TOKEN_SQUARE_BRACE_CLOSE);
+            
+            // recursivly parse inner expression for right-to-left associativity
+            auto innerExpr = parsePriority<2>();
+            
+            expr = std::make_unique<UnaryOperation>(std::move(innerExpr), TOKEN_KEYWORD_TYPE);
+
         } else {
             expr = parsePriority<1>();
         }

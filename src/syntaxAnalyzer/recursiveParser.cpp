@@ -211,7 +211,7 @@ std::unique_ptr<WhileStatement> MyParser::parseWhileStatement(void){
 std::unique_ptr<Statement> MyParser::parseStatement(void){
 
     switch (currentToken.type) {
-    case TOKEN_KEYWORD_TYPE:
+    case TOKEN_KEYWORD_TYPE: 
         return parseVariableDeclarationStatement();
 
     case TOKEN_KEYWORD_IF:

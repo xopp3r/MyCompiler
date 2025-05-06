@@ -4,165 +4,261 @@
 #include "IVisitor.hpp"
 #include "nodes.hpp"
 
+#include <string>
+#include <vector>
+
+
+constexpr auto Vbar = std::u8string_view((u8"│ "));  
+constexpr auto Cbar = std::u8string_view((u8"├─"));
+constexpr auto Ebar = std::u8string_view((u8"└─"));
+constexpr auto Nbar = std::u8string_view((u8"  "));
+
+
+#define SUBDIR(...) \
+    prefix.resize(++depth + 1); \
+    __VA_ARGS__ \
+    prefix.resize(--depth + 1); \
+
+
 
 
 
 class PrinterVisitor final : public IVisitor {
     public:
-    void print(Programm& node){
-        visit(node);
-        deep = 0;
+    void PrintProgramASTasHierarcy(Programm* node){
+        prefix.push_back(std::string_view(reinterpret_cast<const char*>(Nbar.data()))); // set first row to empty
+        visit(*node);
+        depth = 0;
+        prefix.clear();
+        tempPrefixIndex = 0;
     }
+
 
     private:
-    size_t deep = 0;
+    size_t depth = 0;
+    std::vector<std::string_view> prefix;
 
-    void printLine(std::string_view str){
-        std::cout << std::string(deep*2, ' ') << str << std::endl;
+    size_t tempPrefixIndex = 0;
+    std::u8string_view afterPrefix;
+
+
+    void setTempPrefix(const std::u8string_view& tempPrefix, const std::u8string_view& expiritionPrefix){
+        tempPrefixIndex = depth;
+        afterPrefix = expiritionPrefix;
+        prefix.at(depth) = std::string_view(reinterpret_cast<const char*>(tempPrefix.data()));
     }
+
+    void updateTempPrefix(){
+        if (tempPrefixIndex != 0){ 
+            prefix.at(tempPrefixIndex) = std::string_view(reinterpret_cast<const char*>(afterPrefix.data()));
+            tempPrefixIndex = 0;
+        }
+    }
+
+
+    void print(const std::string_view& str){
+        for (const auto& pref : prefix) std::cout << pref;
+        std::cout << str << std::endl;
+
+        updateTempPrefix();
+    }
+
+
+    template <typename T>
+    void printVec(const std::vector<T>& vec) {
+        if (vec.empty()) return;
+
+        SUBDIR(
+
+            for (size_t i = 0; i < vec.size() - 1; ++i) {
+                setTempPrefix(Cbar, Vbar);
+                vec[i]->accept(this);
+            }
+            
+            setTempPrefix(Ebar, Nbar);
+            vec.back()->accept(this);
+        
+        )
+    }
+
+
+    // void printLn(const std::string_view& str, const std::string_view& newPrefix = ""){
+
+    //     setPrefix(newPrefix);
+    //     print(str);
+
+    // }
+
+
+
 
 
 
     void visit(BinaryOperation& node){
-        printLine(tokenName(node.operation));
-        deep++;
+        print(tokenName(node.operation));
+        SUBDIR(
+            setTempPrefix(Cbar, Vbar);
             node.leftValue->accept(this);
+            setTempPrefix(Ebar, Nbar);
             node.rightValue->accept(this);
-        deep--;
+        )
     }
 
     void visit(UnaryOperation& node){
-        printLine(tokenName(node.operation));
-        deep++;
+        print(tokenName(node.operation));
+        SUBDIR(
+            setTempPrefix(Ebar, Nbar);
             node.value->accept(this);
-        deep--;
+        )
     }
 
     void visit(FunctionCall& node){
-        printLine("FunctionCall");
-        deep++;
-
-            printLine("adress");
-            deep++;
+        print("FunctionCall");
+        SUBDIR(
+            setTempPrefix(Cbar, Vbar);
+            print("adress");
+            SUBDIR(
+                setTempPrefix(Ebar, Nbar);
                 node.functionAdress->accept(this);
-            deep--;
+            )
 
-            printLine("args " + std::to_string(node.arguments.size()));
-            deep++;
-                for (const auto& expr : node.arguments) expr->accept(this);
-            deep--;
+            setTempPrefix(Ebar, Nbar);
+            print("args " + std::to_string(node.arguments.size()));
+            SUBDIR(
+                printVec(node.arguments);
+            )
 
-        deep--;
+        )
     }
 
     void visit(IntegerLiteral& node){
-        printLine("num(" + std::to_string(node.value) + ")");
+        print("num(" + std::to_string(node.value) + ")");
     }
 
     void visit(StringLiteral& node){
-        printLine("str(" + node.value + ")");
+        print("str(" + node.value + ")");
     }
 
     void visit(CharLiteral& node){
-        printLine("char(" + std::to_string(node.value) + ")");
+        print("char(" + std::to_string(node.value) + ")");
     }
 
     void visit(Variable& node){
-        printLine("var(" + std::string(node.token.lexeme) + ")");
+        print("var(" + std::string(node.token.lexeme) + ")");
     }
 
     void visit(ExpressionStatement& node){
-        printLine("Statement");
-        deep++;
+        print("Statement");
+        SUBDIR(
+            setTempPrefix(Ebar, Nbar);
             node.expression->accept(this);
-        deep--;
+        )
     }
 
     void visit(VariableDeclarationStatement& node){
-        printLine(std::string(node.type.lexeme) + " " + std::string(node.name.lexeme));
+        print(std::string(node.type.lexeme) + " " + std::string(node.name.lexeme));
     }
 
     void visit(IfStatement& node){
-        printLine("If");
-        deep++;
+        print("If");
+        SUBDIR(
             
-            printLine("condition");
-            deep++;
+            setTempPrefix(Cbar, Vbar);
+            print("condition");
+            SUBDIR(
+                setTempPrefix(Ebar, Nbar);
                 node.condition->accept(this);
-            deep--;
+            )
 
-            printLine("ifBody " + std::to_string(node.ifBody.size()));
-            deep++;
-                for (const auto& st : node.ifBody) st->accept(this);
-            deep--;
+            setTempPrefix(Cbar, Vbar);
+            print("ifBody " + std::to_string(node.ifBody.size()));
+            SUBDIR(
+                printVec(node.ifBody);
+            )
         
-            printLine("elseBody " + std::to_string(node.elseBody.size()));
-            deep++;
-                for (const auto& st : node.elseBody) st->accept(this);
-            deep--;
+            setTempPrefix(Ebar, Nbar);
+            print("elseBody " + std::to_string(node.elseBody.size()));
+            SUBDIR(
+                printVec(node.elseBody);
+            )
 
-        deep--;
+        )
     }
 
     void visit(WhileStatement& node){
-        printLine("While");
-        deep++;
+        print("While");
+        SUBDIR(
             
-            printLine("condition");
-            deep++;
-                node.condition->accept(this);
-            deep--;
 
-            printLine("body " + std::to_string(node.body.size()));
-            deep++;
-                for (const auto& st : node.body) st->accept(this);
-            deep--;
+            setTempPrefix(Cbar, Vbar);
+            print("condition");
+            SUBDIR(
+                setTempPrefix(Ebar, Nbar);
+                node.condition->accept(this);
+            )
+
+            setTempPrefix(Ebar, Nbar);
+            print("body " + std::to_string(node.body.size()));
+            SUBDIR(
+                printVec(node.body);
+            )
         
-        deep--;
+        )
     }
 
     void visit(ReturnStatement& node){
-        printLine("Return");
-        deep++;
+        print("Return");
+        SUBDIR(
+            setTempPrefix(Ebar, Nbar);
             node.expression->accept(this);
-        deep--;
+        )
     }
 
     void visit(FunctionDefinition& node){
-        printLine("Function " + std::string(node.returnType.lexeme) + " " + std::string(node.name.lexeme));
-        deep++;
+        print("Function " + std::string(node.returnType.lexeme) + " " + std::string(node.name.lexeme));
+        SUBDIR(
 
-            printLine("args " + std::to_string(node.arguments.size()));
-            deep++;
-                for (const auto& arg : node.arguments) printLine(std::string(arg.first.lexeme) + " " + std::string(arg.second.lexeme));
-            deep--;
+            setTempPrefix(Cbar, Vbar);
+            print("args " + std::to_string(node.arguments.size()));
+            SUBDIR(
+                if (node.arguments.size() > 0) {
+                    for (size_t arg = 0; arg + 1 < node.arguments.size(); arg++){
+                        setTempPrefix(Cbar, Vbar);
+                        print(std::string(node.arguments[arg].first.lexeme) + " " + std::string(node.arguments[arg].second.lexeme));
+                    }
 
-            printLine("body " + std::to_string(node.body.size()));
-            deep++;
-                for (const auto& st : node.body) st->accept(this);
-            deep--;
+                    setTempPrefix(Ebar, Nbar);
+                    print(std::string(node.arguments.back().first.lexeme) + " " + std::string(node.arguments.back().second.lexeme));
+                }
+            )
 
-        deep--;
+            setTempPrefix(Ebar, Nbar);
+            print("body " + std::to_string(node.body.size()));
+                printVec(node.body);
+
+        )
     }
 
+
     void visit(Programm& node){
-        printLine("Programm");
-        deep++;
+        print("Programm");
+        SUBDIR(
 
-            printLine("Globals " + std::to_string(node.globalVariables.size()));
-            deep++;
-                for (const auto& var : node.globalVariables) var->accept(this);
-            deep--;
+            setTempPrefix(Cbar, Vbar);
+            print("Globals " + std::to_string(node.globalVariables.size()));
+                printVec(node.globalVariables);
 
-            printLine("Functions " + std::to_string(node.functions.size()));
-            deep++;
-                for (const auto& func : node.functions) func->accept(this);
-            deep--;
+            setTempPrefix(Ebar, Nbar);
+            print("Functions " + std::to_string(node.functions.size()));
+                printVec(node.functions);
 
-        deep--;
+        )
+
     }
 
 
 
 };
 
+
+#undef SUBDIR
