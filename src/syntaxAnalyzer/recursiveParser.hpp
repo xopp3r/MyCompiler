@@ -38,8 +38,8 @@ class MyParser : public IParser {
     std::unique_ptr<VariableDeclarationStatement> parseVariableDeclarationStatement(void);
     
     std::unique_ptr<Expression> parseExpression(void);
-    #include "recursiveParser.tpp" // templated functions defenition for parsing priority
 
+    #include "recursiveParser.tpp" // templated functions defenition for parsing priority
 };
 
 

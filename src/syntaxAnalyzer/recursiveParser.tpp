@@ -1,5 +1,7 @@
 #pragma once
 
+
+
 #include "recursiveParser.hpp"
 
 
@@ -25,18 +27,18 @@ std::unique_ptr<Expression> parseLeftAssociativeBinaryOperationSequence(){
     // while priority of current operation match
     while (isTokenOneOf<AllowedTokensTypes...>(currentToken.type)) { 
 
-        // save current token type and skip it
-        TokenType consumedTokenType = currentToken.type;
-        discardToken(currentToken.type);
+        // save current operator
+        Token op = consumeToken(currentToken.type);
         
         // parse next trem
         auto right = parsePriority<operationPriority - 1>();
         
         // build tree and left rotate
         left = std::make_unique<BinaryOperation>(
+            op,
             std::move(left), 
             std::move(right), 
-            consumedTokenType
+            op.type
         );
     }
     
@@ -54,16 +56,17 @@ std::unique_ptr<Expression> parseRightAssociativeBinaryOperationSequence() {
     auto left = parsePriority<OperationPriority - 1>();
 
     if (isTokenOneOf<AllowedTokensTypes...>(currentToken.type)) {
-        TokenType consumedTokenType = currentToken.type;
-        discardToken(currentToken.type);
+
+        Token op = consumeToken(currentToken.type);
         
         // recursivly parse right expression for right-to-left associativity
         auto right = parseRightAssociativeBinaryOperationSequence<OperationPriority, AllowedTokensTypes...>();
         
         left = std::make_unique<BinaryOperation>(
+            op,
             std::move(left),
             std::move(right),
-            consumedTokenType
+            op.type
         );
     }
     
@@ -125,27 +128,27 @@ std::unique_ptr<Expression> parsePriority(void){
         while (currentToken.type == TOKEN_SQUARE_BRACE_OPEN or 
                currentToken.type == TOKEN_PARENTHESES_OPEN) { 
     
-            // save current token type and skip it
-            TokenType consumedTokenType = currentToken.type;
-            discardToken(currentToken.type);
+            // save current token
+            Token consumedToken = consumeToken(currentToken.type);
             
     
             // parse arguments
-            if (consumedTokenType == TOKEN_SQUARE_BRACE_OPEN){
+            if (consumedToken.type == TOKEN_SQUARE_BRACE_OPEN){
                 // array indexing
                 auto right = parseExpression();
                 discardToken(TOKEN_SQUARE_BRACE_CLOSE);
     
                 // converting arr[i] to @(arr + i)
-                left = std::make_unique<BinaryOperation>(std::move(left), std::move(right), TOKEN_OP_PLUS);
-                left = std::make_unique<UnaryOperation>(std::move(left), TOKEN_OP_DEREFERENCE);
+                // some problems with tokens and positioning)) FIXME
+                left = std::make_unique<BinaryOperation>(Token(consumedToken.position, TOKEN_OP_PLUS, "+"), std::move(left), std::move(right), TOKEN_OP_PLUS);
+                left = std::make_unique<UnaryOperation>(Token(consumedToken.position, TOKEN_OP_DEREFERENCE, "@"), std::move(left), TOKEN_OP_DEREFERENCE);
     
             } else {
                 // function call
                 auto arguments = parseFunctionCallArguments();
                 discardToken(TOKEN_PARENTHESES_CLOSE);
     
-                left = std::make_unique<FunctionCall>(std::move(left), std::move(arguments));
+                left = std::make_unique<FunctionCall>(consumedToken, std::move(left), std::move(arguments));
             }
     
     
@@ -165,24 +168,24 @@ std::unique_ptr<Expression> parsePriority(void){
 
         if (isTokenOneOf<TOKEN_OP_MINUS, TOKEN_OP_NOT, TOKEN_OP_ADRESS, TOKEN_OP_DEREFERENCE>(currentToken.type)) {
 
-            TokenType consumedTokenType = currentToken.type;
-            discardToken(currentToken.type);
+            Token op = consumeToken(currentToken.type);
             
             // recursivly parse inner expression for right-to-left associativity
             auto innerExpr = parsePriority<2>();
             
-            expr = std::make_unique<UnaryOperation>(std::move(innerExpr), consumedTokenType);
+            expr = std::make_unique<UnaryOperation>(op, std::move(innerExpr), op.type);
 
         } else if (currentToken.type == TOKEN_SQUARE_BRACE_OPEN) {
 
             discardToken(TOKEN_SQUARE_BRACE_OPEN);
-            discardToken(TOKEN_KEYWORD_TYPE);
+            Token castType = consumeToken(TOKEN_KEYWORD_TYPE);
             discardToken(TOKEN_SQUARE_BRACE_CLOSE);
             
             // recursivly parse inner expression for right-to-left associativity
             auto innerExpr = parsePriority<2>();
             
-            expr = std::make_unique<UnaryOperation>(std::move(innerExpr), TOKEN_KEYWORD_TYPE);
+            // TODO MB it's binary operator
+            expr = std::make_unique<UnaryOperation>(castType, std::move(innerExpr), TOKEN_KEYWORD_TYPE);
 
         } else {
             expr = parsePriority<1>();
@@ -243,11 +246,11 @@ std::unique_ptr<Expression> parsePriority(void){
                 <8, TOKEN_OP_ASSIGNMENT>();
         
 
-    } else static_assert("Main expression parsing function (parsePriority) compiling error");
-
+    } else static_assert(priority >= 0 && priority <= 8, 
+        "Invalid priority level in parsePriority\nMain expression parsing function (parsePriority) compiling error"
+      );
 
 
 }
-
 
 

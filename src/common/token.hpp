@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string_view>
-#include "../common/position.hpp"
+#include "position.hpp"
 
 
 

@@ -120,13 +120,6 @@ std::vector<std::unique_ptr<Expression>> MyParser::parseFunctionCallArguments(vo
         if (currentToken.type != TOKEN_PARENTHESES_CLOSE) discardToken(TOKEN_COMMA);
 
     }
-
-    // for ( // sorry
-    //     auto arg = parseExpression();
-    //     arg != nullptr; // until end of a (a, r, g, s)
-    //     arg = parseExpression()
-    // ) arguments.push_back(std::move(arg));
-   
     
     return arguments;
 }
@@ -140,20 +133,20 @@ std::unique_ptr<ExpressionStatement> MyParser::parseExpressionStatement(void){
 
     auto expr = parseExpression();
 
-    discardToken(TOKEN_SEMICOLON);
+    Token tok = consumeToken(TOKEN_SEMICOLON);
 
-    return std::make_unique<ExpressionStatement>(std::move(expr));
+    return std::make_unique<ExpressionStatement>(tok, std::move(expr));
 }
 
 
-
+// return expression ;
 std::unique_ptr<ReturnStatement> MyParser::parseReturnStatement(void){
 
-    discardToken(TOKEN_KEYWORD_RETURN);
+    Token tok = consumeToken(TOKEN_KEYWORD_RETURN);
     auto expr = parseExpression();
     discardToken(TOKEN_SEMICOLON);
 
-    return std::make_unique<ReturnStatement>(std::move(expr));
+    return std::make_unique<ReturnStatement>(tok, std::move(expr));
 
 }
 
@@ -163,7 +156,7 @@ std::unique_ptr<ReturnStatement> MyParser::parseReturnStatement(void){
 // if ( expression ) { statementSequence } (else { statementSequence })?
 std::unique_ptr<IfStatement> MyParser::parseIfStatement(void){
 
-    discardToken(TOKEN_KEYWORD_IF);
+    Token tok = consumeToken(TOKEN_KEYWORD_IF);
 
     discardToken(TOKEN_PARENTHESES_OPEN);
     auto condition = parseExpression();
@@ -179,11 +172,11 @@ std::unique_ptr<IfStatement> MyParser::parseIfStatement(void){
         auto elseBody = parseStatementSequence();
         discardToken(TOKEN_BRACE_CLOSE);
 
-        return std::make_unique<IfStatement>(std::move(condition), std::move(ifBody), std::move(elseBody));
+        return std::make_unique<IfStatement>(tok, std::move(condition), std::move(ifBody), std::move(elseBody));
     }
 
     // if there just single IF
-    return std::make_unique<IfStatement>(std::move(condition), std::move(ifBody), std::vector<std::unique_ptr<Statement>>(0));
+    return std::make_unique<IfStatement>(tok, std::move(condition), std::move(ifBody), std::vector<std::unique_ptr<Statement>>(0));
 
 }
 
@@ -191,7 +184,7 @@ std::unique_ptr<IfStatement> MyParser::parseIfStatement(void){
 
 std::unique_ptr<WhileStatement> MyParser::parseWhileStatement(void){
 
-    discardToken(TOKEN_KEYWORD_WHILE);
+    Token tok = consumeToken(TOKEN_KEYWORD_WHILE);
 
     discardToken(TOKEN_PARENTHESES_OPEN);
     auto condition = parseExpression();
@@ -201,7 +194,7 @@ std::unique_ptr<WhileStatement> MyParser::parseWhileStatement(void){
     auto body = parseStatementSequence();
     discardToken(TOKEN_BRACE_CLOSE);
 
-    return std::make_unique<WhileStatement>(std::move(condition), std::move(body));
+    return std::make_unique<WhileStatement>(tok, std::move(condition), std::move(body));
 
 }
 
@@ -296,7 +289,7 @@ std::vector<std::pair<Token, Token>> MyParser::parseFunctionDefinitionArguments(
 // function <type> <identifier> ( args_list_defeniton ) { statementSequence }
 std::unique_ptr<FunctionDefinition> MyParser::parseFunctionDefinition(void){
 
-    discardToken(TOKEN_KEYWORD_FUNCTION);
+    Token tok = consumeToken(TOKEN_KEYWORD_FUNCTION);
 
     Token returnType = consumeToken(TOKEN_KEYWORD_TYPE);
     Token name = consumeToken(TOKEN_IDENTIFIER);
@@ -309,7 +302,7 @@ std::unique_ptr<FunctionDefinition> MyParser::parseFunctionDefinition(void){
     auto body = parseStatementSequence();
     discardToken(TOKEN_BRACE_CLOSE);
 
-    return std::make_unique<FunctionDefinition>(name, returnType, std::move(arguments), std::move(body));
+    return std::make_unique<FunctionDefinition>(tok, name, returnType, std::move(arguments), std::move(body));
 }
 
 
@@ -320,9 +313,9 @@ std::unique_ptr<VariableDeclarationStatement> MyParser::parseVariableDeclaration
     Token type = consumeToken(TOKEN_KEYWORD_TYPE);
     Token name = consumeToken(TOKEN_IDENTIFIER);
 
-    discardToken(TOKEN_SEMICOLON);
+    Token tok = consumeToken(TOKEN_SEMICOLON);
 
-    return std::make_unique<VariableDeclarationStatement>(type, name);
+    return std::make_unique<VariableDeclarationStatement>(tok, type, name);
 }
 
 

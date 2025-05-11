@@ -59,7 +59,7 @@ expression              // common interface
 
 
 type
-    : char | int | uint | pointer | void
+    : 'char' | 'int' | 'uint' | 'pointer' | 'void'
     ;
 
 
@@ -74,6 +74,7 @@ statement
     | variable_declaration ';'
     | if_statement
     | while_statement
+    | return_statement
     ;
 
 
@@ -82,6 +83,11 @@ statement_sequence
     : statement statement_sequence
     ;
 
+
+
+return_statement
+    : 'return' expression ';'
+    ;
 
 
 body

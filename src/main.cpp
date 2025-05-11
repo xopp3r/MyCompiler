@@ -7,7 +7,7 @@
 
 #include "tokenizer/MyTokenizer.hpp"
 #include "syntaxAnalyzer/recursiveParser.hpp"
-#include "syntaxAnalyzer/printerVisitor.hpp"
+#include "semanticsAnalyzer/printerVisitor.hpp"
 
 
 int main(int argc, char const* argv[]){
@@ -39,8 +39,8 @@ int main(int argc, char const* argv[]){
     PrinterVisitor printer;
     printer.PrintProgramASTasHierarcy(ast.root.get());
 
-    std::cout << "SUCCESS FINISH" << std::endl;
-    return 0;
+    
+    std::cout << "SUCCESS" << std::endl;
 }
 
 

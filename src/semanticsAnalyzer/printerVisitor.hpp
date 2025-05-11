@@ -2,7 +2,7 @@
 
 
 #include "IVisitor.hpp"
-#include "nodes.hpp"
+#include "../common/nodes.hpp"
 
 #include <string>
 #include <vector>
@@ -95,7 +95,7 @@ class PrinterVisitor final : public IVisitor {
 
 
     void visit(BinaryOperation& node){
-        print(tokenName(node.operation));
+        print(node.token.lexeme);
         SUBDIR(
             setTempPrefix(Cbar, Vbar);
             node.leftValue->accept(this);
@@ -105,7 +105,7 @@ class PrinterVisitor final : public IVisitor {
     }
 
     void visit(UnaryOperation& node){
-        print(tokenName(node.operation));
+        print(node.token.lexeme);
         SUBDIR(
             setTempPrefix(Ebar, Nbar);
             node.value->accept(this);
@@ -136,7 +136,7 @@ class PrinterVisitor final : public IVisitor {
     }
 
     void visit(StringLiteral& node){
-        print("str(" + node.value + ")");
+        print("str(" + std::string(node.value) + ")");
     }
 
     void visit(CharLiteral& node){
@@ -144,7 +144,7 @@ class PrinterVisitor final : public IVisitor {
     }
 
     void visit(Variable& node){
-        print("var(" + std::string(node.token.lexeme) + ")");
+        print("var(" + std::string(node.identifier) + ")");
     }
 
     void visit(ExpressionStatement& node){

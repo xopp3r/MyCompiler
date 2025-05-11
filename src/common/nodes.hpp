@@ -2,9 +2,9 @@
 
 
 #include <memory>
-#include "../tokenizer/token.hpp"
-#include "../common/logger.hpp"
-#include "IVisitor.hpp"
+#include "token.hpp"
+#include "logger.hpp"
+#include "../semanticsAnalyzer/IVisitor.hpp"
 
 
 
@@ -15,11 +15,13 @@
 // Base class for every node in ast
 class Node {
     public:
+        Node() = delete; 
         virtual ~Node() = default;
         
         // virtual method for Visitor pattern
         virtual void accept(IVisitor* visitor) = 0;
-        // void accept(IVisitor* visitor) override { visitor->visit(*this); }  // add this function to every final class
+        // add this function to every final class
+        // void accept(IVisitor* visitor) override { visitor->visit(*this); } 
 
         
         // Prevent slicing
@@ -29,10 +31,13 @@ class Node {
         // Allow moving
         Node(Node&&) = default;
         Node& operator=(Node&&) = default;
+
+        Token token;
     
     protected:
-        Node() = default; 
-    };
+        Node(Token tok) : token(tok) {} 
+
+};
 
 
 
@@ -52,17 +57,24 @@ class Node {
 
 class Expression : public Node {
     public:
-    virtual ~Expression() override = default;
+        virtual ~Expression() override = default;
 
     protected:
-    Expression() = default;
+        Expression(Token tok) : Node(tok) {}
 };
 
 
     class UnaryOperation final : public Expression {
         public:
-        explicit UnaryOperation(std::unique_ptr<Expression> Value, TokenType Operation) 
-            : value(std::move(Value)), operation(Operation) {};
+        explicit UnaryOperation(
+                                Token tok, 
+                                std::unique_ptr<Expression> Value, 
+                                TokenType Operation
+                               ) 
+            : Expression(tok), 
+              value(std::move(Value)), 
+              operation(Operation) {};
+
 
         std::unique_ptr<Expression> value;
         TokenType operation;
@@ -73,8 +85,16 @@ class Expression : public Node {
 
     class BinaryOperation final : public Expression {
         public:
-        explicit BinaryOperation(std::unique_ptr<Expression> LeftValue, std::unique_ptr<Expression> RightValue, TokenType Operation) 
-            : leftValue(std::move(LeftValue)), rightValue(std::move(RightValue)), operation(Operation) {};
+        explicit BinaryOperation(
+                                 Token tok, 
+                                 std::unique_ptr<Expression> LeftValue, 
+                                 std::unique_ptr<Expression> RightValue, 
+                                 TokenType Operation
+                                ) 
+            : Expression(tok), 
+              leftValue(std::move(LeftValue)), 
+              rightValue(std::move(RightValue)), 
+              operation(Operation) {};
 
         std::unique_ptr<Expression> leftValue;
         std::unique_ptr<Expression> rightValue;
@@ -86,8 +106,14 @@ class Expression : public Node {
 
     class FunctionCall final : public Expression {
         public:
-        explicit FunctionCall(std::unique_ptr<Expression> FunctionAdress, std::vector<std::unique_ptr<Expression>> Arguments) 
-            : functionAdress(std::move(FunctionAdress)), arguments(std::move(Arguments)) {};
+        explicit FunctionCall(
+                              Token tok, 
+                              std::unique_ptr<Expression> FunctionAdress, 
+                              std::vector<std::unique_ptr<Expression>> Arguments
+                             ) 
+            : Expression(tok), 
+              functionAdress(std::move(FunctionAdress)), 
+              arguments(std::move(Arguments)) {};
 
         std::unique_ptr<Expression> functionAdress;
         std::vector<std::unique_ptr<Expression>> arguments;
@@ -100,16 +126,15 @@ class Expression : public Node {
 
 
 
-// < ================ LITERALS ================ >
+// < ================ LITERALS and VARIABLES ================ >
 
 
 class Primitive : public Expression {
     public:
-    Primitive(Token nodeToken) : token(nodeToken) {};
+        ~Primitive() override = default;
     
-    ~Primitive() override = default;
-    
-    Token token;
+    protected:
+        Primitive(Token tok) : Expression(tok) {};
 };
 
 
@@ -137,7 +162,7 @@ class Primitive : public Expression {
         explicit StringLiteral(Token literal) 
             : Primitive(literal), value(literal.lexeme) {};
         
-        std::string value;
+        std::string_view value;
 
         void accept(IVisitor* visitor) override { visitor->visit(*this); }
     };
@@ -157,8 +182,10 @@ class Primitive : public Expression {
 
     class Variable final : public Primitive {
         public:
-        explicit Variable(Token Identifier) 
-            : Primitive(Identifier) {};
+        explicit Variable(Token tok) 
+            : Primitive(tok), identifier(tok.lexeme) {};
+
+        std::string_view identifier;
 
         void accept(IVisitor* visitor) override { visitor->visit(*this); }
     };
@@ -179,16 +206,15 @@ class Statement : public Node {
     public:    
     ~Statement() override = default;
     
-
     protected:
-    Statement() = default;
+    Statement(Token tok) : Node(tok) {}
 };
 
 
     class ExpressionStatement final : public Statement {
         public:
-        explicit ExpressionStatement(std::unique_ptr<Expression> expr) 
-            : expression(std::move(expr)) {};
+        explicit ExpressionStatement(Token tok, std::unique_ptr<Expression> expr) 
+            : Statement(tok), expression(std::move(expr)) {};
 
         std::unique_ptr<Expression> expression;
 
@@ -198,8 +224,8 @@ class Statement : public Node {
 
     class VariableDeclarationStatement final : public Statement {
         public:
-        explicit VariableDeclarationStatement(Token Type, Token Name) 
-            : type(Type), name(Name) {};
+        explicit VariableDeclarationStatement(Token tok, Token Type, Token Name) 
+            : Statement(tok), type(Type), name(Name) {};
 
         Token type;
         Token name;
@@ -211,11 +237,15 @@ class Statement : public Node {
     class IfStatement final : public Statement {
         public:
         explicit IfStatement(
+                        Token tok, 
                         std::unique_ptr<Expression> Condition, 
                         std::vector<std::unique_ptr<Statement>>&& IfBody, 
                         std::vector<std::unique_ptr<Statement>>&& ElseBody
                        ) 
-            : condition(std::move(Condition)), ifBody(std::move(IfBody)), elseBody(std::move(ElseBody)) {};
+            : Statement(tok), 
+              condition(std::move(Condition)), 
+              ifBody(std::move(IfBody)), 
+              elseBody(std::move(ElseBody)) {};
 
         std::unique_ptr<Expression> condition;
         std::vector<std::unique_ptr<Statement>> ifBody;
@@ -227,8 +257,13 @@ class Statement : public Node {
 
     class WhileStatement final : public Statement {
         public:
-        explicit WhileStatement(std::unique_ptr<Expression> Condition, std::vector<std::unique_ptr<Statement>>&& Body) 
-            : condition(std::move(Condition)), body(std::move(Body)) {};
+        explicit WhileStatement(
+                                Token tok, 
+                                std::unique_ptr<Expression> Condition, 
+                                std::vector<std::unique_ptr<Statement>>&& Body) 
+            : Statement(tok), 
+              condition(std::move(Condition)), 
+              body(std::move(Body)) {};
 
         std::unique_ptr<Expression> condition;
         std::vector<std::unique_ptr<Statement>> body;
@@ -239,8 +274,8 @@ class Statement : public Node {
 
     class ReturnStatement final : public Statement {
         public:
-        explicit ReturnStatement(std::unique_ptr<Expression> expr) 
-            : expression(std::move(expr)) {};
+        explicit ReturnStatement(Token tok, std::unique_ptr<Expression> expr) 
+            : Statement(tok), expression(std::move(expr)) {};
 
         std::unique_ptr<Expression> expression;
     
@@ -261,12 +296,17 @@ class Statement : public Node {
 class FunctionDefinition final : public Node {
     public:
     explicit FunctionDefinition(
+                        Token tok, 
                         Token Name, 
                         Token ReturnType, 
                         std::vector<std::pair<Token, Token>>&& Arguments,
                         std::vector<std::unique_ptr<Statement>>&& Body
                       ) 
-        : name(Name), returnType(ReturnType), arguments(std::move(Arguments)), body(std::move(Body)) {};
+        : Node(tok),
+          name(Name), 
+          returnType(ReturnType), 
+          arguments(std::move(Arguments)), 
+          body(std::move(Body)) {};
 
     Token name;
     Token returnType;
@@ -285,7 +325,9 @@ class Programm final : public Node {
              std::vector<std::unique_ptr<FunctionDefinition>>&& Functions, 
              std::vector<std::unique_ptr<VariableDeclarationStatement>>&& Globals
             ) 
-        : functions(std::move(Functions)), globalVariables(std::move(Globals)) {}
+        : Node(Token(Position(0,0,0), TOKEN_END, "PROGRAMM ROOT")),
+          functions(std::move(Functions)), 
+          globalVariables(std::move(Globals)) {}
 
     // other stuff (metadata)
     std::vector<std::unique_ptr<FunctionDefinition>> functions;
