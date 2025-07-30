@@ -1,11 +1,11 @@
 #pragma once 
 
-
 #include "IVisitor.hpp"
-#include "../common/nodes.hpp"
 
 #include <string>
+#include <memory>
 #include <vector>
+
 
 
 constexpr auto Vbar = std::u8string_view((u8"│ "));  
@@ -14,251 +14,59 @@ constexpr auto Ebar = std::u8string_view((u8"└─"));
 constexpr auto Nbar = std::u8string_view((u8"  "));
 
 
-#define SUBDIR(...) \
-    prefix.resize(++depth + 1); \
-    __VA_ARGS__ \
-    prefix.resize(--depth + 1); \
-
-
-
-
 
 class PrinterVisitor final : public IVisitor {
     public:
-    void PrintProgramASTasHierarcy(Programm* node){
-        prefix.push_back(std::string_view(reinterpret_cast<const char*>(Nbar.data()))); // set first row to empty
-        visit(*node);
-        depth = 0;
-        prefix.clear();
-        tempPrefixIndex = 0;
-    }
-
+    void PrintProgramASTasHierarcy(Programm& node);
 
     private:
     size_t depth = 0;
     std::vector<std::string_view> prefix;
-
     size_t tempPrefixIndex = 0;
     std::u8string_view afterPrefix;
 
+    void updateTempPrefix();
+    void setTempPrefix(const std::u8string_view& tempPrefix, const std::u8string_view& expiritionPrefix);
+    
+    void print(const std::string_view& str);
+    void printVec(const std::vector<std::unique_ptr<Node>>& vec);
 
-    void setTempPrefix(const std::u8string_view& tempPrefix, const std::u8string_view& expiritionPrefix){
-        tempPrefixIndex = depth;
-        afterPrefix = expiritionPrefix;
-        prefix.at(depth) = std::string_view(reinterpret_cast<const char*>(tempPrefix.data()));
-    }
-
-    void updateTempPrefix(){
-        if (tempPrefixIndex != 0){ 
-            prefix.at(tempPrefixIndex) = std::string_view(reinterpret_cast<const char*>(afterPrefix.data()));
-            tempPrefixIndex = 0;
-        }
-    }
-
-
-    void print(const std::string_view& str){
-        for (const auto& pref : prefix) std::cout << pref;
-        std::cout << str << std::endl;
-
-        updateTempPrefix();
-    }
+    void visit(BinaryOperation& node) override;
+    void visit(UnaryOperation& node) override;
+    void visit(FunctionCall& node) override;
+    void visit(IntegerLiteral& node) override;
+    void visit(StringLiteral& node) override;
+    void visit(CharLiteral& node) override;
+    void visit(Variable& node) override;
+    void visit(ExpressionStatement& node) override;
+    void visit(VariableDeclarationStatement& node) override;
+    void visit(IfStatement& node) override;
+    void visit(WhileStatement& node) override;
+    void visit(ReturnStatement& node) override;
+    void visit(FunctionDefinition& node) override;
+    void visit(Programm& node) override;
 
 
-    template <typename T>
-    void printVec(const std::vector<T>& vec) {
+    template<typename T>
+    requires std::derived_from<T, Node> 
+    void printVec(const std::vector<std::unique_ptr<T>>& vec) {
         if (vec.empty()) return;
 
-        SUBDIR(
+        // SUBDIR( 
+        prefix.resize(++depth + 1); \
 
             for (size_t i = 0; i < vec.size() - 1; ++i) {
                 setTempPrefix(Cbar, Vbar);
-                vec[i]->accept(this);
+                vec[i]->accept(*this);
             }
             
             setTempPrefix(Ebar, Nbar);
-            vec.back()->accept(this);
-        
-        )
+            vec.back()->accept(*this);
+
+        prefix.resize(--depth + 1); \
+        // )
     }
-
-
-    // void printLn(const std::string_view& str, const std::string_view& newPrefix = ""){
-
-    //     setPrefix(newPrefix);
-    //     print(str);
-
-    // }
-
-
-
-
-
-
-    void visit(BinaryOperation& node){
-        print(node.token.lexeme);
-        SUBDIR(
-            setTempPrefix(Cbar, Vbar);
-            node.leftValue->accept(this);
-            setTempPrefix(Ebar, Nbar);
-            node.rightValue->accept(this);
-        )
-    }
-
-    void visit(UnaryOperation& node){
-        print(node.token.lexeme);
-        SUBDIR(
-            setTempPrefix(Ebar, Nbar);
-            node.value->accept(this);
-        )
-    }
-
-    void visit(FunctionCall& node){
-        print("FunctionCall");
-        SUBDIR(
-            setTempPrefix(Cbar, Vbar);
-            print("adress");
-            SUBDIR(
-                setTempPrefix(Ebar, Nbar);
-                node.functionAdress->accept(this);
-            )
-
-            setTempPrefix(Ebar, Nbar);
-            print("args " + std::to_string(node.arguments.size()));
-            SUBDIR(
-                printVec(node.arguments);
-            )
-
-        )
-    }
-
-    void visit(IntegerLiteral& node){
-        print("num(" + std::to_string(node.value) + ")");
-    }
-
-    void visit(StringLiteral& node){
-        print("str(" + std::string(node.value) + ")");
-    }
-
-    void visit(CharLiteral& node){
-        print("char(" + std::to_string(node.value) + ")");
-    }
-
-    void visit(Variable& node){
-        print("var(" + std::string(node.identifier) + ")");
-    }
-
-    void visit(ExpressionStatement& node){
-        print("Statement");
-        SUBDIR(
-            setTempPrefix(Ebar, Nbar);
-            node.expression->accept(this);
-        )
-    }
-
-    void visit(VariableDeclarationStatement& node){
-        print(std::string(node.type.lexeme) + " " + std::string(node.name.lexeme));
-    }
-
-    void visit(IfStatement& node){
-        print("If");
-        SUBDIR(
-            
-            setTempPrefix(Cbar, Vbar);
-            print("condition");
-            SUBDIR(
-                setTempPrefix(Ebar, Nbar);
-                node.condition->accept(this);
-            )
-
-            setTempPrefix(Cbar, Vbar);
-            print("ifBody " + std::to_string(node.ifBody.size()));
-            SUBDIR(
-                printVec(node.ifBody);
-            )
-        
-            setTempPrefix(Ebar, Nbar);
-            print("elseBody " + std::to_string(node.elseBody.size()));
-            SUBDIR(
-                printVec(node.elseBody);
-            )
-
-        )
-    }
-
-    void visit(WhileStatement& node){
-        print("While");
-        SUBDIR(
-            
-
-            setTempPrefix(Cbar, Vbar);
-            print("condition");
-            SUBDIR(
-                setTempPrefix(Ebar, Nbar);
-                node.condition->accept(this);
-            )
-
-            setTempPrefix(Ebar, Nbar);
-            print("body " + std::to_string(node.body.size()));
-            SUBDIR(
-                printVec(node.body);
-            )
-        
-        )
-    }
-
-    void visit(ReturnStatement& node){
-        print("Return");
-        SUBDIR(
-            setTempPrefix(Ebar, Nbar);
-            node.expression->accept(this);
-        )
-    }
-
-    void visit(FunctionDefinition& node){
-        print("Function " + std::string(node.returnType.lexeme) + " " + std::string(node.name.lexeme));
-        SUBDIR(
-
-            setTempPrefix(Cbar, Vbar);
-            print("args " + std::to_string(node.arguments.size()));
-            SUBDIR(
-                if (node.arguments.size() > 0) {
-                    for (size_t arg = 0; arg + 1 < node.arguments.size(); arg++){
-                        setTempPrefix(Cbar, Vbar);
-                        print(std::string(node.arguments[arg].first.lexeme) + " " + std::string(node.arguments[arg].second.lexeme));
-                    }
-
-                    setTempPrefix(Ebar, Nbar);
-                    print(std::string(node.arguments.back().first.lexeme) + " " + std::string(node.arguments.back().second.lexeme));
-                }
-            )
-
-            setTempPrefix(Ebar, Nbar);
-            print("body " + std::to_string(node.body.size()));
-                printVec(node.body);
-
-        )
-    }
-
-
-    void visit(Programm& node){
-        print("Programm");
-        SUBDIR(
-
-            setTempPrefix(Cbar, Vbar);
-            print("Globals " + std::to_string(node.globalVariables.size()));
-                printVec(node.globalVariables);
-
-            setTempPrefix(Ebar, Nbar);
-            print("Functions " + std::to_string(node.functions.size()));
-                printVec(node.functions);
-
-        )
-
-    }
-
-
 
 };
 
 
-#undef SUBDIR

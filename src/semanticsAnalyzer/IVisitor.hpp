@@ -1,6 +1,6 @@
 #pragma once
 
-
+class Node;
 class BinaryOperation;
 class UnaryOperation;
 class FunctionCall;

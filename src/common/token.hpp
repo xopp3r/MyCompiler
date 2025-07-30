@@ -46,7 +46,8 @@ enum TokenType {
     TOKEN_OP_ASSIGNMENT,  // =
     TOKEN_OP_ADRESS, // &
     TOKEN_OP_DEREFERENCE, // @
-    TOKEN_INVALID // ERROR
+    TOKEN_INVALID, // ERROR
+    TOKEN_PLACEHOLDER // system internal token
 };
 
 
@@ -91,7 +92,8 @@ static std::string_view tokenNames[] = {
     "TOKEN_OP_ASSIGNMENT",
     "TOKEN_OP_ADRESS",
     "TOKEN_OP_DEREFERENCE",
-    "TOKEN_INVALID"     
+    "TOKEN_INVALID",
+    "TOKEN_PLACEHOLDER"
 };
 
 

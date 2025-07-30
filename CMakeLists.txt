@@ -11,6 +11,7 @@ file(GLOB SOURCES
     "src/common/*.cpp"
     "src/tokenizer/*.cpp"
     "src/syntaxAnalyzer/*.cpp"
+    "src/semanticsAnalyzer/*.cpp"
     )
 
 # Включить максимальный уровень предупреждений + Werror

@@ -260,18 +260,19 @@ std::vector<std::unique_ptr<Statement>> MyParser::parseStatementSequence(void){
 
 
 // <type> <identifier> (, <type> <identifier>)*
-std::vector<std::pair<Token, Token>> MyParser::parseFunctionDefinitionArguments(void){
+std::vector<std::unique_ptr<VariableDeclarationStatement>> MyParser::parseFunctionDefinitionArguments(void){
 
-    std::vector<std::pair<Token, Token>> args;
+    std::vector<std::unique_ptr<VariableDeclarationStatement>> args;
 
     auto type = consumeTokenOpt(TOKEN_KEYWORD_TYPE); 
     auto name = consumeTokenOpt(TOKEN_IDENTIFIER); 
-    bool comma = type and name; // to bypass check at first argument
+    std::optional<Token> comma = Token(type.value().position, TOKEN_PLACEHOLDER, ""); // to bypass check at first argument
+    
     while (type and name and comma) {
 
-        args.push_back(std::pair<Token, Token>(type.value(), name.value()));
+        args.push_back(std::make_unique<VariableDeclarationStatement>(comma.value(), type.value(), name.value()));
 
-        comma = discardTokenOpt(TOKEN_COMMA);
+        comma = consumeTokenOpt(TOKEN_COMMA);
         type = consumeTokenOpt(TOKEN_KEYWORD_TYPE);
         name = consumeTokenOpt(TOKEN_IDENTIFIER);
 
@@ -313,7 +314,7 @@ std::unique_ptr<VariableDeclarationStatement> MyParser::parseVariableDeclaration
     Token type = consumeToken(TOKEN_KEYWORD_TYPE);
     Token name = consumeToken(TOKEN_IDENTIFIER);
 
-    Token tok = consumeToken(TOKEN_SEMICOLON);
+    Token tok = (currentToken.type == TOKEN_SEMICOLON) ? consumeToken(TOKEN_SEMICOLON) : consumeToken(TOKEN_COMMA);
 
     return std::make_unique<VariableDeclarationStatement>(tok, type, name);
 }

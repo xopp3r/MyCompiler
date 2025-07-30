@@ -115,7 +115,7 @@ function_defenition
 
 
 argument_list_defenition
-    : (type <IDENTIFIER> (',' type <IDENTIFIER>)*)?
+    : (variable_declaration (',' variable_declaration)*)?
     ;
 
 

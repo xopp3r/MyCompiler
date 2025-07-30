@@ -25,7 +25,7 @@ class MyParser : public IParser {
     std::unique_ptr<Programm> parse(void);
     
     std::unique_ptr<FunctionDefinition> parseFunctionDefinition(void);
-    std::vector<std::pair<Token, Token>> parseFunctionDefinitionArguments(void);
+    std::vector<std::unique_ptr<VariableDeclarationStatement>> parseFunctionDefinitionArguments(void);
     std::vector<std::unique_ptr<Expression>> parseFunctionCallArguments(void);
 
     std::vector<std::unique_ptr<Statement>> parseStatementSequence(void);

@@ -10,12 +10,18 @@
 #include "semanticsAnalyzer/printerVisitor.hpp"
 
 
+
+
+
+
+
 int main(int argc, char const* argv[]){
 
     if (argc <= 1) {
         std::cout << "No input file specified" << std::endl;
         return EXIT_FAILURE;
     }
+
 
     std::ifstream sourceFile(argv[1]);
 
@@ -37,7 +43,7 @@ int main(int argc, char const* argv[]){
 
     
     PrinterVisitor printer;
-    printer.PrintProgramASTasHierarcy(ast.root.get());
+    printer.PrintProgramASTasHierarcy(*ast.root.get());
 
     
     std::cout << "SUCCESS" << std::endl;
