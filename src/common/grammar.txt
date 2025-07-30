@@ -11,8 +11,7 @@ priority_0              // highest priority
 
 
 priority_1
-	: priority_0 (( '[' expression ']' ) |
-                  ( '(' (expression (',' expression)*)? ')' ))*
+	: priority_0 ( '(' (expression (',' expression)*)? ')' )*
 	;
 
 

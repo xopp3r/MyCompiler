@@ -119,37 +119,37 @@ std::unique_ptr<Expression> parsePriority(void){
     } else if constexpr (priority == 1){
 
         // priority_1
-        //     : priority_0 (( '[' expression ']' ) |
-        //                   ( '(' (expression (',' expression)*)? ')' ))*
+        //     : priority_0 ( '(' (expression (',' expression)*)? ')' )*
         //     ;
         auto left = parsePriority<0>(); // parse higher priority expressions first
     
         // while priority of current operation match
-        while (currentToken.type == TOKEN_SQUARE_BRACE_OPEN or 
-               currentToken.type == TOKEN_PARENTHESES_OPEN) { 
+        while (currentToken.type == TOKEN_PARENTHESES_OPEN) { 
     
             // save current token
-            Token consumedToken = consumeToken(currentToken.type);
+            Token consumedToken = consumeToken(TOKEN_PARENTHESES_OPEN);
             
     
-            // parse arguments
-            if (consumedToken.type == TOKEN_SQUARE_BRACE_OPEN){
-                // array indexing
-                auto right = parseExpression();
-                discardToken(TOKEN_SQUARE_BRACE_CLOSE);
+            // // parse arguments
+            // if (consumedToken.type == TOKEN_SQUARE_BRACE_OPEN){
+            //     // array indexing
+            //     auto right = parseExpression();
+            //     discardToken(TOKEN_SQUARE_BRACE_CLOSE);
     
-                // converting arr[i] to @(arr + i)
-                // some problems with tokens and positioning)) FIXME
-                left = std::make_unique<BinaryOperation>(Token(consumedToken.position, TOKEN_OP_PLUS, "+"), std::move(left), std::move(right), TOKEN_OP_PLUS);
-                left = std::make_unique<UnaryOperation>(Token(consumedToken.position, TOKEN_OP_DEREFERENCE, "@"), std::move(left), TOKEN_OP_DEREFERENCE);
+            //     // converting arr[i] to @(arr + i)
+            //     // some problems with tokens and positioning)) FIXME
+            //     left = std::make_unique<BinaryOperation>(Token(consumedToken.position, TOKEN_OP_PLUS, "+"), std::move(left), std::move(right), TOKEN_OP_PLUS);
+            //     left = std::make_unique<UnaryOperation>(Token(consumedToken.position, TOKEN_OP_DEREFERENCE, "@"), std::move(left), TOKEN_OP_DEREFERENCE);
     
-            } else {
+            // } else {
+
                 // function call
                 auto arguments = parseFunctionCallArguments();
                 discardToken(TOKEN_PARENTHESES_CLOSE);
     
                 left = std::make_unique<FunctionCall>(consumedToken, std::move(left), std::move(arguments));
-            }
+            
+            // }
     
     
         }
